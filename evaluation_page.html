@@ -1,0 +1,127 @@
+
+<!DOCTYPE html>
+<link rel="stylesheet" href="navbar.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+<html lang="en">
+    
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Evaluation Page</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            color: #333;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            background-color: #f9f9f9;
+        }
+        h1 {
+            font-size: 24px;
+        }
+        .form-group {
+            margin-bottom: 20px;
+        }
+        .form-group label {
+            display: block;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+        .form-group input[type="radio"] {
+            margin-right: 10px;
+        }
+        .btn {
+            display: inline-block;
+            padding: 10px 20px;
+            font-size: 16px;
+            color: #fff;
+            background-color: #007bff;
+            border: none;
+            border-radius: 4px;
+            text-decoration: none;
+            text-align: center;
+            cursor: pointer;
+            margin-top: 20px;
+        }
+        .btn:hover {
+            background-color: #0056b3;
+        }
+    </style>
+</head>
+<body>
+    <div class="navbar">
+        <a href="index.php"><i class="fas fa-home"></i> Home</a>
+        <a href="evaluation_page.html"><i class="fas fa-clipboard-list"></i> Evaluation</a>
+        <a href="layer.php"><i class="fas fa-map-marker-alt"></i> Location</a>
+        <a href="scan.html"><i class="fas fa-qrcode"></i> Scan</a>
+    </div>
+    <div class="container">
+        <h1>Evaluation Form</h1>
+        <form id="evaluationForm">
+            <div class="form-group">
+                <label for="seal">ซีล:</label>
+                <input type="radio" id="sealYes" name="seal" value="yes" required>
+                <label for="sealYes">Yes</label>
+                <input type="radio" id="sealNo" name="seal" value="no">
+                <label for="sealNo">No</label>
+            </div>
+            <div class="form-group">
+                <label for="pressure">แรงดัน:</label>
+                <input type="radio" id="pressureYes" name="pressure" value="yes" required>
+                <label for="pressureYes">Yes</label>
+                <input type="radio" id="pressureNo" name="pressure" value="no">
+                <label for="pressureNo">No</label>
+            </div>
+            <div class="form-group">
+                <label for="hose">สายวัด:</label>
+                <input type="radio" id="hoseYes" name="hose" value="yes" required>
+                <label for="hoseYes">Yes</label>
+                <input type="radio" id="hoseNo" name="hose" value="no">
+                <label for="hoseNo">No</label>
+            </div>
+            <div class="form-group">
+                <label for="body">ตัวถัง:</label>
+                <input type="radio" id="bodyYes" name="body" value="yes" required>
+                <label for="bodyYes">Yes</label>
+                <input type="radio" id="bodyNo" name="body" value="no">
+                <label for="bodyNo">No</label>
+            </div>
+            <button type="submit" class="btn">Submit</button>
+        </form>
+    </div>
+    <script>
+        document.getElementById('evaluationForm').addEventListener('submit', function(event) {
+            event.preventDefault(); // ป้องกันการส่งฟอร์มแบบปกติ
+
+            const formData = new FormData(this);
+            const data = Object.fromEntries(formData.entries());
+
+            console.log('Form data:', data);
+
+            // ส่งข้อมูลไปยังเซิร์ฟเวอร์หรือดำเนินการอื่นๆ
+            // เช่น: ใช้ fetch API เพื่อส่งข้อมูล
+            fetch('process_evaluation.php', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(data),
+            })
+            .then(response => response.json())
+            .then(result => {
+                // จัดการผลลัพธ์ที่ได้จากการส่งข้อมูล
+                alert('Evaluation submitted successfully!');
+            })
+            .catch(error => {
+                console.error('Error:', error);
+            });
+        });
+    </script>
+</body>
+</html>

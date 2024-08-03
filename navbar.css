@@ -1,0 +1,59 @@
+/* ทำให้ HTML และ BODY มีความสูงเต็มที่ */
+html, body {
+    height: 100%;
+    margin: 0;
+}
+
+/* สไตล์พื้นฐานของ Navbar */
+.navbar {
+    display: flex;
+    justify-content: space-around; /* จัดเรียงไอเท็มในแนวนอน */
+    align-items: center; /* จัดให้อยู่กลางแนวตั้ง */
+    position: fixed; /* ติดอยู่ที่ด้านล่าง */
+    bottom: 0; /* ตำแหน่งแนวตั้ง */
+    left: 0; /* ตำแหน่งแนวนอน */
+    width: 100%; /* ความกว้างเต็มที่ */
+    background-color: #333; /* สีพื้นหลังของ Navbar */
+    color: white; /* สีข้อความ */
+    padding: 10px 0; /* การจัดวางภายใน */
+    box-shadow: 0 -1px 5px rgba(0, 0, 0, 0.1); /* เงาที่ด้านบนของ Navbar */
+    font-size: 14px; /* ขนาดตัวอักษรพื้นฐาน */
+}
+
+/* สไตล์ลิงก์ใน Navbar */
+.navbar a {
+    color: white; /* สีของลิงก์ */
+    text-decoration: none; /* ไม่ให้มีเส้นใต้ */
+    font-size: 14px; /* ขนาดตัวอักษรพื้นฐาน */
+    display: flex; /* จัดตำแหน่งภายใน */
+    align-items: center; /* จัดให้อยู่กลางแนวตั้ง */
+    transition: color 0.3s; /* การเปลี่ยนสีของลิงก์ */
+}
+
+/* สไตล์ลิงก์เมื่อ hover */
+.navbar a:hover {
+    color: #007bff; /* สีเมื่อ hover */
+}
+
+/* สไตล์ไอคอนใน Navbar */
+.navbar i {
+    margin-right: 8px; /* ระยะห่างระหว่างไอคอนและข้อความ */
+}
+
+/* เพิ่ม margin-bottom ให้กับเนื้อหาในหน้าเพื่อหลีกเลี่ยงการซ่อนโดย Navbar */
+body {
+    padding-bottom: 50px; /* ปรับขนาดตามความสูงของ Navbar */
+}
+
+/* Media Queries สำหรับหน้าจอเล็ก */
+@media (max-width: 600px) {
+    .navbar {
+        flex-direction: column; /* เปลี่ยนทิศทางเป็นแนวตั้ง */
+        font-size: 12px; /* ขนาดตัวอักษรสำหรับมือถือ */
+        padding: 10px; /* การจัดวางภายใน */
+    }
+
+    .navbar a {
+        margin: 5px 0; /* ระยะห่างระหว่างลิงก์ */
+    }
+}
