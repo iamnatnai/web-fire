@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login</title>
+    <link rel="stylesheet" href="navbar.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
+    <style>
+       body {
+            font-family: 'Roboto', sans-serif;
+            background: linear-gradient(135deg, #6a11cb, #2575fc);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            color: #333;
+        }
+
+        .login-container {
+            background-color: #fff;
+            padding: 40px;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+            width: 360px;
+            text-align: center;
+            border: 1px solid #ddd;
+        }
+
+        .login-container h2 {
+            margin-bottom: 20px;
+            color: #333;
+            font-size: 24px;
+        }
+
+        .login-container label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 500;
+            color: #555;
+        }
+
+        .login-container input[type="text"],
+        .login-container input[type="password"] {
+            width: calc(100% - 20px);
+            padding: 10px;
+            margin-bottom: 15px;
+            border: 1px solid #ccc;
+            border-radius: 6px;
+            font-size: 16px;
+            transition: border-color 0.3s ease;
+        }
+
+        .login-container input[type="text"]:focus,
+        .login-container input[type="password"]:focus {
+            border-color: #4CAF50;
+            outline: none;
+        }
+
+        .login-container input[type="submit"] {
+            width: 100%;
+            padding: 12px;
+            background-color: #4CAF50;
+            border: none;
+            border-radius: 6px;
+            color: white;
+            font-size: 18px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+
+        .login-container input[type="submit"]:hover {
+            background-color: #45a049;
+        }
+
+        .login-container .error {
+            color: red;
+            margin-bottom: 15px;
+        }
+
+        .login-container .success {
+            color: green;
+            margin-bottom: 15px;
+        }
+
+        .login-container .footer-text {
+            margin-top: 20px;
+            font-size: 14px;
+        }
+
+        .login-container .footer-text a {
+            color: #4CAF50;
+            text-decoration: none;
+            font-weight: bold;
+        }
+
+        .login-container .footer-text a:hover {
+            text-decoration: underline;
+        }
+    </style>
+    </style>
+</head>
+<body>
+    <div class="login-container">
+        <h2>Login</h2>
+        <form id="loginForm" action="login.php" method="POST">
+            <label for="username">Username</label>
+            <input type="text" id="username" name="username" required>
+
+            <label for="password">Password</label>
+            <input type="password" id="password" name="password" required>
+
+            <input type="submit" value="Login">
+        </form>
+    </div>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script>
+        $(document).ready(function(){
+            $('#loginForm').on('submit', function(e) {
+                e.preventDefault(); // ป้องกันการส่งฟอร์มปกติ
+
+                var formData = $(this).serialize(); // ดึงข้อมูลฟอร์ม
+
+                $.ajax({
+                    type: 'POST',
+                    url: 'login.php', // URL ที่ใช้ตรวจสอบการล็อกอิน
+                    data: formData,
+                    success: function(response) {
+                        if (response === "success") {
+                            window.location.href = "index.php"; // เปลี่ยนเส้นทางหลังจากล็อกอินสำเร็จ
+                        } else {
+                            Swal.fire({
+                                icon: 'error',
+                                title: 'Login Failed',
+                                text: response, // ข้อความผิดพลาดจากเซิร์ฟเวอร์
+                                confirmButtonText: 'Try Again'
+                            });
+                        }
+                    },
+                    error: function() {
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Oops...',
+                            text: 'Something went wrong!',
+                            confirmButtonText: 'Try Again'
+                        });
+                    }
+                });
+            });
+        });
+    </script>
+</body>
+</html>

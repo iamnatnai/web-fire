@@ -1,13 +1,11 @@
-
 <!DOCTYPE html>
-<link rel="stylesheet" href="navbar.css">
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
 <html lang="en">
-    
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Evaluation Page</title>
+    <link rel="stylesheet" href="navbar.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -36,6 +34,9 @@
         .form-group input[type="radio"] {
             margin-right: 10px;
         }
+        .form-group input[type="file"] {
+            margin-top: 10px;
+        }
         .btn {
             display: inline-block;
             padding: 10px 20px;
@@ -63,7 +64,8 @@
     </div>
     <div class="container">
         <h1>Evaluation Form</h1>
-        <form id="evaluationForm">
+        <p id="fire-code">ชื่อถัง: </p>
+        <form id="evaluationForm" method="POST" enctype="multipart/form-data">
             <div class="form-group">
                 <label for="seal">ซีล:</label>
                 <input type="radio" id="sealYes" name="seal" value="yes" required>
@@ -92,36 +94,20 @@
                 <input type="radio" id="bodyNo" name="body" value="no">
                 <label for="bodyNo">No</label>
             </div>
+            <div class="form-group">
+                <label for="image">อัพโหลดรูปภาพ:</label>
+                <input type="file" id="image" name="image">
+            </div>
             <button type="submit" class="btn">Submit</button>
         </form>
     </div>
     <script>
-        document.getElementById('evaluationForm').addEventListener('submit', function(event) {
-            event.preventDefault(); // ป้องกันการส่งฟอร์มแบบปกติ
+        // รับค่า 'data' จาก URL
+        const urlParams = new URLSearchParams(window.location.search);
+        const fireCode = urlParams.get('data');
 
-            const formData = new FormData(this);
-            const data = Object.fromEntries(formData.entries());
-
-            console.log('Form data:', data);
-
-            // ส่งข้อมูลไปยังเซิร์ฟเวอร์หรือดำเนินการอื่นๆ
-            // เช่น: ใช้ fetch API เพื่อส่งข้อมูล
-            fetch('process_evaluation.php', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify(data),
-            })
-            .then(response => response.json())
-            .then(result => {
-                // จัดการผลลัพธ์ที่ได้จากการส่งข้อมูล
-                alert('Evaluation submitted successfully!');
-            })
-            .catch(error => {
-                console.error('Error:', error);
-            });
-        });
+        // แสดงค่า 'data'
+        document.getElementById('fire-code').textContent += fireCode ? fireCode : 'ไม่มีข้อมูล QR Code';
     </script>
 </body>
 </html>

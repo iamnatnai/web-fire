@@ -108,7 +108,7 @@ $conn->close();
             <p><strong>รูปภาพ:</strong></p>
             <img src="<?php echo htmlspecialchars("/my-php/" . $response['data']['image_path']); ?>" alt="Fire Extinguisher Image">
             <!-- เพิ่มปุ่มเพื่อไปยังหน้าทำแบบประเมิน -->
-            <a href="evaluation_page.html" class="btn">ไปยังแบบประเมิน</a>
+            <a href="evaluation_page.html?data=<?php echo urlencode($response['data']['FCODE']); ?>" class="btn">ไปยังแบบประเมิน</a>
         <?php else: ?>
             <p>ไม่พบข้อมูลในฐานข้อมูล</p>
         <?php endif; ?>

@@ -32,7 +32,7 @@ html, body {
 
 /* สไตล์ลิงก์เมื่อ hover */
 .navbar a:hover {
-    color: #007bff; /* สีเมื่อ hover */
+    color: #007bff; 
 }
 
 /* สไตล์ไอคอนใน Navbar */

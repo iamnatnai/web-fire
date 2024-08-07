@@ -1,5 +1,5 @@
 <?php
-require 'config.php'; // เรียกใช้การตั้งค่าฐานข้อมูลจาก config.php
+require 'configregis.php'; // เรียกใช้การตั้งค่าฐานข้อมูลจาก config.php
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $username = trim($_POST['username']);
