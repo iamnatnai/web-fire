@@ -13,10 +13,10 @@ html, body {
     bottom: 0; /* ตำแหน่งแนวตั้ง */
     left: 0; /* ตำแหน่งแนวนอน */
     width: 100%; /* ความกว้างเต็มที่ */
-    background-color: #333; /* สีพื้นหลังของ Navbar */
+    background-color: #5f0670; /* สีพื้นหลังของ Navbar */
     color: white; /* สีข้อความ */
     padding: 10px 0; /* การจัดวางภายใน */
-    box-shadow: 0 -1px 5px rgba(0, 0, 0, 0.1); /* เงาที่ด้านบนของ Navbar */
+    box-shadow: 0 -1px 5px rgba(54, 18, 63, 0.288); /* เงาที่ด้านบนของ Navbar */
     font-size: 14px; /* ขนาดตัวอักษรพื้นฐาน */
 }
 
@@ -32,7 +32,7 @@ html, body {
 
 /* สไตล์ลิงก์เมื่อ hover */
 .navbar a:hover {
-    color: #007bff; 
+    color: #f0ff69; 
 }
 
 /* สไตล์ไอคอนใน Navbar */

@@ -1,10 +1,17 @@
 <?php
+ini_set('display_errors', 1);
+ini_set('display_startup_errors', 1);
+error_reporting(E_ALL);
 header('Content-Type: application/json');
-$servername = "localhost";
-$username = "root";
-$password = "";
-$dbname = "fired_data";
+// $servername = "localhost";
+// $username = "root";
+// $password = "";
+// $dbname = "fired_data";
 
+$servername = "localhost";
+$username = "kasemra2_dcc"; // ชื่อผู้ใช้ฐานข้อมูล
+$password = "123456"; // รหัสผ่านฐานข้อมูล
+$dbname = "kasemra2_dcc"; // ชื่อฐานข้อมูล
 // สร้างการเชื่อมต่อ
 $conn = new mysqli($servername, $username, $password, $dbname);
 

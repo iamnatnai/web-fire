@@ -1,10 +1,13 @@
 <?php
 // config.php
+// $servername = "localhost";
+// $username = "root"; // ชื่อผู้ใช้ฐานข้อมูล
+// $password = ""; // รหัสผ่านฐานข้อมูล
+// $dbname = "fired_data"; // ชื่อฐานข้อมูล
 $servername = "localhost";
-$username = "root"; // ชื่อผู้ใช้ฐานข้อมูล
-$password = ""; // รหัสผ่านฐานข้อมูล
-$dbname = "fired_data"; // ชื่อฐานข้อมูล
-
+$username = "kasemra2_dcc"; // ชื่อผู้ใช้ฐานข้อมูล
+$password = "123456"; // รหัสผ่านฐานข้อมูล
+$dbname = "kasemra2_dcc"; // ชื่อฐานข้อมูล
 $dsn = "mysql:host=$servername;dbname=$dbname;charset=utf8mb4";
 $options = [
     PDO::ATTR_ERRMODE            => PDO::ERRMODE_EXCEPTION,

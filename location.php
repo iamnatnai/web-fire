@@ -1,9 +1,14 @@
 <?php
 // เชื่อมต่อฐานข้อมูล
+// $servername = "localhost";
+// $username = "root";
+// $password = "";
+// $dbname = "fired_data";
+
 $servername = "localhost";
-$username = "root";
-$password = "";
-$dbname = "fired_data";
+$username = "kasemra2_dcc"; // ชื่อผู้ใช้ฐานข้อมูล
+$password = "123456"; // รหัสผ่านฐานข้อมูล
+$dbname = "kasemra2_dcc"; // ชื่อฐานข้อมูล
 
 $conn = new mysqli($servername, $username, $password, $dbname);
 

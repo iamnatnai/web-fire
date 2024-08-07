@@ -101,10 +101,15 @@ session_start();
             <a href="logout.php" class="button" style="background-color: #f44336;">Logout</a>
             <?php
             // เชื่อมต่อฐานข้อมูล
+            // $servername = "localhost";
+            // $username = "root";
+            // $password = "";
+            // $dbname = "fired_data";
+
             $servername = "localhost";
-            $username = "root";
-            $password = "";
-            $dbname = "fired_data";
+$username = "kasemra2_dcc"; // ชื่อผู้ใช้ฐานข้อมูล
+$password = "123456"; // รหัสผ่านฐานข้อมูล
+$dbname = "kasemra2_dcc"; // ชื่อฐานข้อมูล
 
             $conn = new mysqli($servername, $username, $password, $dbname);
 
@@ -136,7 +141,7 @@ session_start();
                         <p><strong>สายน้ำ:</strong> <?php echo htmlspecialchars($record['F_water']); ?></p>
                         <p><strong>ที่อยู่:</strong> <?php echo htmlspecialchars($record['F_located']); ?></p>
                         <p><strong>รูปภาพ:</strong></p>
-                        <img src="<?php echo htmlspecialchars("/my-php/" . $record['image_path']); ?>" alt="Fire Extinguisher Image">
+                        <img src="<?php echo htmlspecialchars("/mick/my-php" . $record['image_path']); ?>" alt="Fire Extinguisher Image">
                     </div>
                 <?php endforeach; ?>
             <?php else: ?>

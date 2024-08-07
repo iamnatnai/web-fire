@@ -125,7 +125,7 @@ function tick() {
       hasScanned = true;
 
       // ส่งข้อมูล QR Code ไปยังเซิร์ฟเวอร์
-      fetch('process_qr.php', {
+      fetch("https://kasemradpcc.com/mick/my-php/process_qr.php", {
   method: 'POST',
   headers: {
     'Content-Type': 'application/x-www-form-urlencoded',
@@ -138,7 +138,7 @@ function tick() {
     const result = JSON.parse(text); // แปลงข้อความเป็น JSON
     if (result.status === "found") {
       // เปลี่ยนไปยังหน้าผลลัพธ์และส่งข้อมูลไปด้วย
-      window.location.href = `result_page.php?data=${encodeURIComponent(code.data)}`;
+      window.location.href = `mick/my-php/result_page.php?data=${encodeURIComponent(code.data)}`;
     } else if (result.status === "not_found") {
       outputMessage.innerText = "ไม่พบข้อมูลในฐานข้อมูล";
     }
