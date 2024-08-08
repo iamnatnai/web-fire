@@ -1,59 +1,54 @@
 <?php
-// $servername = "localhost"; // ชื่อเซิร์ฟเวอร์ฐานข้อมูล
-// $username = "root"; // ชื่อผู้ใช้ฐานข้อมูล
-// $password = ""; // รหัสผ่านฐานข้อมูล
-// $dbname = "fired_data"; // ชื่อฐานข้อมูล
+// Include the database configuration file
+include 'config.php';
 
-$servername = "localhost";
-$username = "kasemra2_dcc"; // ชื่อผู้ใช้ฐานข้อมูล
-$password = "123456"; // รหัสผ่านฐานข้อมูล
-$dbname = "kasemra2_dcc"; // ชื่อฐานข้อมูล
+// Check if GET request
+if ($_SERVER['REQUEST_METHOD'] === 'GET') {
+    // Check if 'data' is set
+    if (isset($_GET['data'])) {
+        $qrData = $_GET['data'];
+        
+        // Protect against SQL Injection
+        $qrData = $conn->real_escape_string($qrData);
 
+        // Query the database
+        $sql = "SELECT * FROM fire_extinguisher WHERE FCODE='$qrData'";
+        $result = $conn->query($sql);
 
-// สร้างการเชื่อมต่อ
-$conn = new mysqli($servername, $username, $password, $dbname);
+        $response = [];
 
-// ตรวจสอบการเชื่อมต่อ
-if ($conn->connect_error) {
-    die("Connection failed: " . $conn->connect_error);
-}
+        if ($result->num_rows > 0) {
+            $row = $result->fetch_assoc();
+            $response = [
+                "status" => "found",
+                "data" => [
+                    "FCODE" => $row["FCODE"],
+                    "F_water" => $row["F_water"],
+                    "F_located" => $row["F_located"],
+                    "image_path" => $row["image_path"]
+                ]
+            ];
+        } else {
+            $response = [
+                "status" => "not_found"
+            ];
+        }
 
-// ตรวจสอบว่ามีการส่งข้อมูล QR Code มาหรือไม่
-if (!isset($_GET['data'])) {
-    echo "QR Code data missing";
-    $conn->close();
-    exit();
-}
-
-// รับข้อมูล QR Code ที่ส่งมาจาก query string
-$qrData = $_GET['data'];
-
-// ป้องกัน SQL Injection
-$qrData = $conn->real_escape_string($qrData);
-
-// ค้นหาข้อมูลในฐานข้อมูลตามค่า QR Code ที่ได้
-$sql = "SELECT * FROM fire_extinguisher WHERE FCODE='$qrData'";
-$result = $conn->query($sql);
-
-$response = [];
-
-if ($result->num_rows > 0) {
-    $row = $result->fetch_assoc();
-    $response = [
-        "status" => "found",
-        "data" => [
-            "FCODE" => $row["FCODE"],
-            "F_water" => $row["F_water"],
-            "F_located" => $row["F_located"],
-            "image_path" => $row["image_path"]
-        ]
-    ];
+        echo json_encode($response);
+    } else {
+        echo json_encode([
+            "status" => "error",
+            "message" => "QR Code data missing"
+        ]);
+    }
 } else {
-    $response = [
-        "status" => "not_found"
-    ];
+    echo json_encode([
+        "status" => "error",
+        "message" => "Invalid request method"
+    ]);
 }
 
+// Close connection
 $conn->close();
 ?>
 <!DOCTYPE html>
@@ -112,7 +107,7 @@ $conn->close();
             <p><strong>สายน้ำ:</strong> <?php echo htmlspecialchars($response['data']['F_water']); ?></p>
             <p><strong>ที่อยู่:</strong> <?php echo htmlspecialchars($response['data']['F_located']); ?></p>
             <p><strong>รูปภาพ:</strong></p>
-            <img src="<?php echo htmlspecialchars("/my-php/" . $response['data']['image_path']); ?>" alt="Fire Extinguisher Image">
+            <img src="<?php echo htmlspecialchars("/mick/my-php"  . $response['data']['image_path']); ?>" alt="Fire Extinguisher Image">
             <!-- เพิ่มปุ่มเพื่อไปยังหน้าทำแบบประเมิน -->
             <a href="evaluation_page.html?data=<?php echo urlencode($response['data']['FCODE']); ?>" class="btn">ไปยังแบบประเมิน</a>
         <?php else: ?>

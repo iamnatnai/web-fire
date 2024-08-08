@@ -1,10 +1,12 @@
-<html>
+<!DOCTYPE html>
+<html lang="en">
+
 <head>
-  <meta charset="utf-8">
+  <meta charset="UTF-8">
   <title>jsQR Demo</title>
   <script src="./jsQR.js"></script>
   <link rel="stylesheet" href="navbar.css">
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
   <style>
     body {
       font-family: 'Ropa Sans', sans-serif;
@@ -12,6 +14,25 @@
       max-width: 640px;
       margin: 0 auto;
       position: relative;
+    }
+
+    .navbar {
+      display: flex;
+      justify-content: space-around;
+      background-color: #333;
+      padding: 10px;
+    }
+
+    .navbar a {
+      color: white;
+      text-decoration: none;
+      padding: 14px 20px;
+      text-align: center;
+    }
+
+    .navbar a:hover {
+      background-color: #ddd;
+      color: black;
     }
 
     #githubLink {
@@ -53,13 +74,14 @@
     }
   </style>
 </head>
+
 <body>
   <div class="navbar">
     <a href="index.php"><i class="fas fa-home"></i> Home</a>
     <a href="evaluation_page.html"><i class="fas fa-clipboard-list"></i> Evaluation</a>
     <a href="layer.php"><i class="fas fa-map-marker-alt"></i> Location</a>
     <a href="scan.html"><i class="fas fa-qrcode"></i> Scan</a>
-</div>
+  </div>
   <div id="loadingMessage">🎥 Unable to access video stream (please make sure you have a webcam enabled)</div>
   <canvas id="canvas" hidden></canvas>
   <div id="output" hidden>
@@ -84,8 +106,7 @@
       canvas.stroke();
     }
 
-    // Use facingMode: environment to attemt to get the front camera on phones
-    navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } }).then(function(stream) {
+    navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } }).then(function (stream) {
       video.srcObject = stream;
       video.setAttribute("playsinline", true); // required to tell iOS safari we don't want fullscreen
       video.play();
@@ -94,71 +115,70 @@
 
     var hasScanned = false; // ตัวแปรเพื่อควบคุมการสแกนครั้งเดียว
 
-    var hasScanned = false; // ตัวแปรเพื่อควบคุมการสแกนครั้งเดียว
+    function tick() {
+      if (hasScanned) return; // หยุดการทำงานถ้าได้สแกนแล้ว
 
-function tick() {
-  if (hasScanned) return; // หยุดการทำงานถ้าได้สแกนแล้ว
+      loadingMessage.innerText = "⌛ Loading video...";
+      if (video.readyState === video.HAVE_ENOUGH_DATA) {
+        loadingMessage.hidden = true;
+        canvasElement.hidden = false;
+        outputContainer.hidden = false;
 
-  loadingMessage.innerText = "⌛ Loading video...";
-  if (video.readyState === video.HAVE_ENOUGH_DATA) {
-    loadingMessage.hidden = true;
-    canvasElement.hidden = false;
-    outputContainer.hidden = false;
+        canvasElement.height = video.videoHeight;
+        canvasElement.width = video.videoWidth;
+        canvas.drawImage(video, 0, 0, canvasElement.width, canvasElement.height);
+        var imageData = canvas.getImageData(0, 0, canvasElement.width, canvasElement.height);
+        var code = jsQR(imageData.data, imageData.width, imageData.height, {
+          inversionAttempts: "dontInvert",
+        });
+        if (code) {
+          drawLine(code.location.topLeftCorner, code.location.topRightCorner, "#FF3B58");
+          drawLine(code.location.topRightCorner, code.location.bottomRightCorner, "#FF3B58");
+          drawLine(code.location.bottomRightCorner, code.location.bottomLeftCorner, "#FF3B58");
+          drawLine(code.location.bottomLeftCorner, code.location.topLeftCorner, "#FF3B58");
+          outputMessage.hidden = true;
+          outputData.parentElement.hidden = false;
+          outputData.innerText = code.data;
 
-    canvasElement.height = video.videoHeight;
-    canvasElement.width = video.videoWidth;
-    canvas.drawImage(video, 0, 0, canvasElement.width, canvasElement.height);
-    var imageData = canvas.getImageData(0, 0, canvasElement.width, canvasElement.height);
-    var code = jsQR(imageData.data, imageData.width, imageData.height, {
-      inversionAttempts: "dontInvert",
-    });
-    if (code) {
-      drawLine(code.location.topLeftCorner, code.location.topRightCorner, "#FF3B58");
-      drawLine(code.location.topRightCorner, code.location.bottomRightCorner, "#FF3B58");
-      drawLine(code.location.bottomRightCorner, code.location.bottomLeftCorner, "#FF3B58");
-      drawLine(code.location.bottomLeftCorner, code.location.topLeftCorner, "#FF3B58");
-      outputMessage.hidden = true;
-      outputData.parentElement.hidden = false;
-      outputData.innerText = code.data;
+          // ตั้งค่าสถานะการสแกนให้เป็นจริงเพื่อหยุดการทำงาน
+          hasScanned = true;
 
-      // ตั้งค่าสถานะการสแกนให้เป็นจริงเพื่อหยุดการทำงาน
-      hasScanned = true;
-
-      // ส่งข้อมูล QR Code ไปยังเซิร์ฟเวอร์
-      fetch("https://kasemradpcc.com/mick/my-php/process_qr.php", {
-  method: 'POST',
-  headers: {
-    'Content-Type': 'application/x-www-form-urlencoded',
-  },
-  body: 'qrData=' + encodeURIComponent(code.data)
+          // ส่งข้อมูล QR Code ไปยังเซิร์ฟเวอร์
+          fetch("https://kasemradpcc.com/mick/my-php/process_qr.php", {
+    method: 'POST',
+    headers: {
+        'Content-Type': 'application/x-www-form-urlencoded',
+    },
+    body: 'qrData=' + encodeURIComponent(code.data)
 })
-.then(response => response.text()) // รับข้อมูลเป็นข้อความ
+.then(response => response.text())
 .then(text => {
-  try {
-    const result = JSON.parse(text); // แปลงข้อความเป็น JSON
-    if (result.status === "found") {
-      // เปลี่ยนไปยังหน้าผลลัพธ์และส่งข้อมูลไปด้วย
-      window.location.href = `mick/my-php/result_page.php?data=${encodeURIComponent(code.data)}`;
-    } else if (result.status === "not_found") {
-      outputMessage.innerText = "ไม่พบข้อมูลในฐานข้อมูล";
+    console.log('Server response:', text); // Log the server response for debugging
+    try {
+        const result = JSON.parse(text);
+        if (result.status === "found") {
+            // Redirect to the result page with the data
+            window.location.href = `result_page.php?data=${encodeURIComponent(code.data)}`;
+        } else if (result.status === "not_found") {
+            outputMessage.innerText = "ไม่พบข้อมูลในฐานข้อมูล";
+        } else if (result.status === "error") {
+            outputMessage.innerText = "เกิดข้อผิดพลาด: " + result.message;
+        }
+    } catch (e) {
+        console.error('Error parsing JSON:', e);
+        outputMessage.innerText = "เกิดข้อผิดพลาดในการประมวลผลข้อมูล";
     }
-  } catch (e) {
-    console.error('Error parsing JSON:', e);
-    outputMessage.innerText = "เกิดข้อผิดพลาดในการประมวลผลข้อมูล";
-  }
 })
 .catch(error => {
-  console.error('Error:', error);
+    console.error('Error:', error);
+    outputMessage.innerText = "เกิดข้อผิดพลาดในการส่งข้อมูลไปยังเซิร์ฟเวอร์";
 });
 
+        }
+      }
+      requestAnimationFrame(tick);
     }
-  }
-  requestAnimationFrame(tick);
-}
-
-
-
-
   </script>
 </body>
+
 </html>
