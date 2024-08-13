@@ -1,59 +1,75 @@
-/* ทำให้ HTML และ BODY มีความสูงเต็มที่ */
+/* HTML และ BODY */
 html, body {
     height: 100%;
     margin: 0;
+    font-family: 'Poppins', sans-serif;
 }
 
 /* สไตล์พื้นฐานของ Navbar */
 .navbar {
     display: flex;
-    justify-content: space-around; /* จัดเรียงไอเท็มในแนวนอน */
-    align-items: center; /* จัดให้อยู่กลางแนวตั้ง */
-    position: fixed; /* ติดอยู่ที่ด้านล่าง */
-    bottom: 0; /* ตำแหน่งแนวตั้ง */
-    left: 0; /* ตำแหน่งแนวนอน */
-    width: 100%; /* ความกว้างเต็มที่ */
-    background-color: #5f0670; /* สีพื้นหลังของ Navbar */
-    color: white; /* สีข้อความ */
-    padding: 10px 0; /* การจัดวางภายใน */
-    box-shadow: 0 -1px 5px rgba(54, 18, 63, 0.288); /* เงาที่ด้านบนของ Navbar */
-    font-size: 14px; /* ขนาดตัวอักษรพื้นฐาน */
+    justify-content: space-between; /* จัดเรียงลิงก์ให้กระจายออก */
+    align-items: center;
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    background: linear-gradient(180deg, rgba(139,0,255,0.7) 0%, rgba(255,255,255,0.3) 100%);
+    color: white;
+    padding: 10px 20px;
+    box-shadow: 0 -1px 8px rgba(0, 0, 0, 0.2);
+    font-size: 14px; /* ลดขนาดตัวอักษรสำหรับหน้าจอเล็ก */
+    border-radius: 20px 20px 0 0;
+    backdrop-filter: blur(8px);
+    transition: transform 0.3s;
+    z-index: 1000;
+    overflow: hidden; /* ซ่อนเนื้อหาที่ล้นออกมา */
+}
+
+/* ซ่อน Navbar โดยใช้ transform */
+.navbar-hidden {
+    transform: translateY(100%);
 }
 
 /* สไตล์ลิงก์ใน Navbar */
 .navbar a {
-    color: white; /* สีของลิงก์ */
-    text-decoration: none; /* ไม่ให้มีเส้นใต้ */
-    font-size: 14px; /* ขนาดตัวอักษรพื้นฐาน */
-    display: flex; /* จัดตำแหน่งภายใน */
-    align-items: center; /* จัดให้อยู่กลางแนวตั้ง */
-    transition: color 0.3s; /* การเปลี่ยนสีของลิงก์ */
+    color: white;
+    text-decoration: none;
+    display: flex;
+    align-items: center;
+    padding: 0 10px; /* เพิ่ม padding สำหรับลิงก์ */
+    transition: color 0.3s, transform 0.3s;
+    white-space: nowrap; /* ป้องกันการตัดบรรทัดของลิงก์ */
 }
 
 /* สไตล์ลิงก์เมื่อ hover */
 .navbar a:hover {
-    color: #f0ff69; 
+    color: #f0ff69;
+    transform: translateY(-2px);
 }
 
 /* สไตล์ไอคอนใน Navbar */
 .navbar i {
-    margin-right: 8px; /* ระยะห่างระหว่างไอคอนและข้อความ */
+    margin-right: 3px; /* ลดระยะห่างระหว่างไอคอนและข้อความ */
+    font-size: 18px;
 }
 
 /* เพิ่ม margin-bottom ให้กับเนื้อหาในหน้าเพื่อหลีกเลี่ยงการซ่อนโดย Navbar */
 body {
-    padding-bottom: 50px; /* ปรับขนาดตามความสูงของ Navbar */
+    padding-bottom: 90px; /* ปรับตามความสูงของ Navbar */
 }
 
 /* Media Queries สำหรับหน้าจอเล็ก */
-@media (max-width: 600px) {
+@media (max-width: 5px) {
     .navbar {
-        flex-direction: column; /* เปลี่ยนทิศทางเป็นแนวตั้ง */
+        flex-direction: column;
         font-size: 12px; /* ขนาดตัวอักษรสำหรับมือถือ */
-        padding: 10px; /* การจัดวางภายใน */
+        padding: 10px 0; /* ลด padding เพื่อเพิ่มพื้นที่ */
+        align-items: flex-start; /* จัดเรียงลิงก์จากซ้ายไปขวา */
     }
 
     .navbar a {
-        margin: 5px 0; /* ระยะห่างระหว่างลิงก์ */
+        padding: 5px 10px; /* ปรับ padding สำหรับลิงก์ */
+        margin: 5px 0; /* เพิ่มระยะห่างระหว่างลิงก์ */
     }
 }

@@ -65,30 +65,6 @@ $conn->close();
             border: 1px solid #ddd;
             border-radius: 8px;
         }
-        .navbar {
-            position: fixed;
-            bottom: 0;
-            left: 0;
-            width: 100%;
-            background-color: #333;
-            color: white;
-            text-align: center;
-            padding: 10px 0;
-            box-shadow: 0 -2px 5px rgba(0, 0, 0, 0.2);
-        }
-        .navbar a {
-            color: white;
-            text-decoration: none;
-            padding: 10px;
-            font-size: 16px;
-        }
-        .navbar i {
-            font-size: 20px;
-            margin-right: 8px;
-        }
-        .navbar a:hover {
-            background-color: #555;
-        }
     </style>
 </head>
 <body>

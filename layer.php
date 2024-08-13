@@ -24,6 +24,25 @@
         #layer-dropdown {
             margin: 20px;
         }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+        table, th, td {
+            border: 1px solid #ddd;
+        }
+        th, td {
+            padding: 10px;
+            text-align: left;
+        }
+        th {
+            background-color: #f4f4f4;
+        }
+        .image-column img {
+            max-width: 100px; /* Adjust as needed */
+            height: auto;
+        }
     </style>
 </head>
 <body>
@@ -51,19 +70,41 @@
         </div>
 
         <div class="container" id="data-container">
-            <!-- Data will be displayed here -->
+            <!-- Data from layerforfire will be displayed here -->
+        </div>
+
+        <div class="container" id="fire-extinguisher-table-container">
+            <!-- Data from fire_extinguisher will be displayed here -->
+            <table id="fire-extinguisher-table">
+                <thead>
+                    <tr>
+                        <th>FCODE</th>
+                        <th>F_water</th>
+                        <th>F_layer</th>
+                        <th>F_located</th>
+                        <th>Image</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <!-- Data will be inserted here -->
+                </tbody>
+            </table>
         </div>
 
         <script>
             let data = [];
 
-            // Fetch data and populate dropdown
-            fetch('fetch_layer.php')
+            // Fetch data and populate dropdown and table
+            fetch('fetch_data.php')
                 .then(response => response.json())
                 .then(result => {
                     if (result.status === "success") {
                         data = result.data; // Store data globally
                         const dropdown = document.getElementById('layer-dropdown');
+                        const tableBody = document.getElementById('fire-extinguisher-table').querySelector('tbody');
+
+                        // Clear existing options except for the first
+                        dropdown.innerHTML = '<option value="">Select a Layer Code</option>';
 
                         // Populate dropdown
                         const uniqueLayerCodes = [...new Set(data.map(item => item.layer_code))];
@@ -76,26 +117,54 @@
 
                         // Handle dropdown change
                         dropdown.addEventListener('change', (event) => {
-                            const selectedCode = event.target.value;
-                            const container = document.getElementById('data-container');
-                            container.innerHTML = '';
+    const selectedCode = event.target.value;
+    const container = document.getElementById('data-container');
+    container.innerHTML = ''; // ล้างเนื้อหาที่เคยมี
 
-                            if (selectedCode) {
-                                data
-                                    .filter(item => item.layer_code === selectedCode)
-                                    .forEach(item => {
-                                        const itemDiv = document.createElement('div');
-                                        itemDiv.className = 'item';
-                                        itemDiv.innerHTML = `
-                                            <p><strong>Layer Code:</strong> ${item.layer_code}</p>
-                                            <p><strong>Description:</strong> ${item.description}</p>
-                                            <p><strong>Image:</strong></p>
-                                            <img src="uploads/${item.image_path}" alt="${item.layer_code}">
-                                        `;
-                                        container.appendChild(itemDiv);
-                                    });
-                            }
-                        });
+    // ล้างแถวที่มีอยู่ในตารางก่อนหน้า
+    tableBody.innerHTML = '';
+
+    if (selectedCode) {
+        // ค้นหารายการแรกที่ตรงกับ layer_code ที่เลือก
+        const selectedItems = data.filter(item => item.layer_code === selectedCode);
+
+        if (selectedItems.length > 0) {
+            const item = selectedItems[0]; // แสดงเฉพาะรายการแรกในส่วนข้อมูลด้านบน
+
+            // แสดงข้อมูลของ layerforfire
+            const itemDiv = document.createElement('div');
+            itemDiv.className = 'item';
+            itemDiv.innerHTML = `
+                <p><strong>Layer Code:</strong> ${item.layer_code}</p>
+                <p><strong>Description:</strong> ${item.description}</p>
+                <p><strong>Image:</strong></p>
+                <img src="uploads/${item.image_path}" alt="${item.layer_code}">
+            `;
+            container.appendChild(itemDiv);
+
+            // วนลูปเพื่อแสดงข้อมูล fire_extinguisher ในตาราง
+            selectedItems.forEach(item => {
+    const row = document.createElement('tr');
+    
+    // Remove "/uploads" from the path if it exists
+    const imagePath = item.extinguisher_image_path.replace('/uploads', '');
+
+    row.innerHTML = `
+        <td>${item.FCODE || 'N/A'}</td>
+        <td>${item.F_water || 'N/A'}</td>
+        <td>${item.F_layer || 'N/A'}</td>
+        <td>${item.F_located || 'N/A'}</td>
+        <td class="image-column">
+            <img src="uploads/${imagePath}" alt="Fire Extinguisher Image">
+        </td>
+    `;
+    tableBody.appendChild(row);
+});
+        }
+    }
+});
+
+
 
                     } else {
                         console.error('Error fetching data:', result.message);
