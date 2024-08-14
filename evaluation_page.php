@@ -1,38 +1,55 @@
 <?php
 header('Content-Type: application/json');
-// $servername = "localhost"; // ชื่อเซิร์ฟเวอร์ฐานข้อมูล
-// $username = "root"; // ชื่อผู้ใช้ฐานข้อมูล
-// $password = ""; // รหัสผ่านฐานข้อมูล
-// $dbname = "fired_data"; // ชื่อฐานข้อมูล
+
 $servername = "localhost";
-$username = "kasemra2_dcc"; // ชื่อผู้ใช้ฐานข้อมูล
-$password = "123456"; // รหัสผ่านฐานข้อมูล
-$dbname = "kasemra2_dcc"; // ชื่อฐานข้อมูล
-// สร้างการเชื่อมต่อ
+$username = "kasemra2_dcc";
+$password = "123456";
+$dbname = "kasemra2_dcc";
+
+// Create connection
 $conn = new mysqli($servername, $username, $password, $dbname);
 
-// ตรวจสอบการเชื่อมต่อ
-if ($conn->connect_error) {
-    die(json_encode(["status" => "error", "message" => "Connection failed: " . $conn->connect_error]));
+// Check connection
+$seal = $conn->real_escape_string($_POST['seal']);
+$pressure = $conn->real_escape_string($_POST['pressure']);
+$hose = $conn->real_escape_string($_POST['hose']);
+$body = $conn->real_escape_string($_POST['body']);
+
+// Handle file upload
+$uploadDir = 'uploads/';
+$imageFileName = '';
+
+if (isset($_FILES['image']) && $_FILES['image']['error'] == UPLOAD_ERR_OK) {
+    $imageFileName = basename($_FILES['image']['name']);
+    $uploadFile = $uploadDir . $imageFileName;
+
+    if (move_uploaded_file($_FILES['image']['tmp_name'], $uploadFile)) {
+        // File upload success
+    } else {
+        // File upload failed
+        echo "<script>
+                alert('Failed to upload file.');
+                window.location.href = 'index.php';
+              </script>";
+        exit();
+    }
 }
 
-// รับข้อมูลจากฟอร์ม
-$data = json_decode(file_get_contents('php://input'), true);
-
-// ป้องกันข้อมูลจากการโจมตี
-$seal = $conn->real_escape_string($data['seal']);
-$pressure = $conn->real_escape_string($data['pressure']);
-$hose = $conn->real_escape_string($data['hose']);
-$body = $conn->real_escape_string($data['body']);
-
-// ตัวอย่างการบันทึกข้อมูลลงในฐานข้อมูล
-$sql = "INSERT INTO evaluations (seal, pressure, hose, body) VALUES ('$seal', '$pressure', '$hose', '$body')";
+// Save form data to the database
+$sql = "INSERT INTO evaluations (seal, pressure, hose, body, image) VALUES ('$seal', '$pressure', '$hose', '$body', '$imageFileName')";
 
 if ($conn->query($sql) === TRUE) {
-    echo json_encode(["status" => "success", "message" => "Evaluation recorded successfully."]);
+    echo "<script>
+            window.location.href = 'index.php';
+          </script>";
 } else {
-    echo json_encode(["status" => "error", "message" => "Error: " . $sql . "<br>" . $conn->error]);
+    // Show SQL error
+    echo "<script>
+            alert('Error: " . $conn->error . "');
+            window.location.href = 'index.php';
+          </script>";
 }
 
 $conn->close();
+
 ?>
