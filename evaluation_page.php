@@ -1,55 +1,466 @@
-<?php
-header('Content-Type: application/json');
+<!DOCTYPE html>
+<html lang="en">
 
-$servername = "localhost";
-$username = "kasemra2_dcc";
-$password = "123456";
-$dbname = "kasemra2_dcc";
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Evaluation Page</title>
+    <link rel="stylesheet" href="navbar.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
+    <link rel="icon" href="/mick/my-php/favicon.ico" type="image/x-icon">
+    <?php include 'navbar.php'; ?>
+    <style>
+        /* General Styles */
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            color: #333;
+        }
 
-// Create connection
-$conn = new mysqli($servername, $username, $password, $dbname);
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            background-color: #f9f9f9;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            transition: all 0.3s ease-in-out;
+        }
 
-// Check connection
-$seal = $conn->real_escape_string($_POST['seal']);
-$pressure = $conn->real_escape_string($_POST['pressure']);
-$hose = $conn->real_escape_string($_POST['hose']);
-$body = $conn->real_escape_string($_POST['body']);
+        .container:hover {
+            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
+        }
 
-// Handle file upload
-$uploadDir = 'uploads/';
-$imageFileName = '';
+        h1 {
+            font-size: 24px;
+            text-align: center;
+            color: #ae00ff;
+            margin-bottom: 20px;
+        }
 
-if (isset($_FILES['image']) && $_FILES['image']['error'] == UPLOAD_ERR_OK) {
-    $imageFileName = basename($_FILES['image']['name']);
-    $uploadFile = $uploadDir . $imageFileName;
+        /* Form Group and List Styles */
+        .form-group {
+            margin-bottom: 20px;
+        }
 
-    if (move_uploaded_file($_FILES['image']['tmp_name'], $uploadFile)) {
-        // File upload success
-    } else {
-        // File upload failed
-        echo "<script>
-                alert('Failed to upload file.');
-                window.location.href = 'index.php';
-              </script>";
-        exit();
-    }
-}
+        .form-group label {
+            font-weight: bold;
+            margin-right: 15px;
+            font-size: 18px;
+        }
 
-// Save form data to the database
-$sql = "INSERT INTO evaluations (seal, pressure, hose, body, image) VALUES ('$seal', '$pressure', '$hose', '$body', '$imageFileName')";
+        .radio-list {
+            list-style: none;
+            padding-left: 0;
+            margin: 0;
+            display: flex;
+            justify-content: center;
+        }
 
-if ($conn->query($sql) === TRUE) {
-    echo "<script>
-            window.location.href = 'index.php';
-          </script>";
-} else {
-    // Show SQL error
-    echo "<script>
-            alert('Error: " . $conn->error . "');
-            window.location.href = 'index.php';
-          </script>";
-}
+        .radio-list li {
+            margin-right: 20px;
+            position: relative;
+            padding-left: 40px;
+            line-height: 25px;
+            cursor: pointer;
+            user-select: none;
+            font-size: 20px;
+            color: #c209f0;
+            transition: color 0.3s ease-in-out;
+        }
 
-$conn->close();
+        .radio-list li:hover {
+            color: #6b095e;
+        }
 
-?>
+        .radio-list input[type="radio"] {
+            position: absolute;
+            opacity: 1;
+            width: 0;
+            height: 0;
+        }
+
+        .radio-list input[type="radio"]+label::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 0;
+            width: 30px;
+            height: 30px;
+            border: 2px solid #c300ff;
+            border-radius: 50%;
+            background-color: #fff;
+            transition: background-color 0.3s ease-in-out, border-color 0.3s ease-in-out;
+        }
+
+        .radio-list input[type="radio"]:checked+label::before {
+            background-color: #e207ff;
+            border-color: #59086d;
+        }
+
+        .radio-list input[type="radio"]:checked+label::after {
+            content: '✔';
+            position: absolute;
+            left: 7px;
+            top: 1px;
+            font-size: 20px;
+            color: #feffad;
+            animation: checkmark 0.3s ease-in-out;
+        }
+
+        @keyframes checkmark {
+            0% {
+                transform: scale(0);
+            }
+
+            50% {
+                transform: scale(1.3);
+            }
+
+            100% {
+                transform: scale(1);
+            }
+        }
+
+        /* Button Styles */
+        .btn {
+            display: inline-block;
+            padding: 15px 30px;
+            font-size: 18px;
+            color: #fff;
+            background-color: #41008b;
+            border: none;
+            border-radius: 8px;
+            text-decoration: none;
+            text-align: center;
+            cursor: pointer;
+            margin-top: 20px;
+            width: 100%;
+            transition: background-color 0.3s ease-in-out, transform 0.2s;
+        }
+
+        .btn:hover {
+            background-color: #7100b3;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        }
+
+        #image {
+            opacity: 0;
+            position: absolute;
+            width: 0;
+            height: 0;
+        }
+
+        /* Custom Button for File Input */
+        .upload-btn {
+            display: inline-block;
+            padding: 10px 20px;
+            font-size: 16px;
+            color: #fff;
+            background-color: #e014a3;
+            border: none;
+            border-radius: 8px;
+            text-decoration: none;
+            cursor: pointer;
+            transition: background-color 0.3s ease-in-out, transform 0.2s;
+            max-width: 200px;
+            text-align: center;
+        }
+
+        .upload-btn:hover {
+            background-color: #cf29b4;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        }
+
+        /* Display the Selected File Name */
+        #file-name {
+            display: block;
+            margin-top: 10px;
+            font-size: 16px;
+            color: #555;
+        }
+        .date-time-container {
+            position: relative;
+            display: inline-block;
+        }
+
+        input[type="datetime-local"] {
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            padding: 10px;
+            font-size: 16px;
+            color: #333;
+            background-color: #fff;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            transition: border-color 0.3s ease-in-out;
+            width: 100%;
+        }
+
+        input[type="datetime-local"]:focus {
+            border-color: #007bff;
+            outline: none;
+            box-shadow: 0 0 0 2px rgba(38, 143, 255, 0.2);
+        }
+
+        .date-time-label {
+            position: absolute;
+            top: 10px;
+            left: 15px;
+            font-size: 16px;
+            color: #aaa;
+            pointer-events: none;
+            transition: all 0.3s ease-in-out;
+            transform-origin: left top;
+        }
+
+        input[type="datetime-local"]:focus ~ .date-time-label,
+        input[type="datetime-local"]:not(:placeholder-shown) ~ .date-time-label {
+            top: -10px;
+            left: 10px;
+            font-size: 12px;
+            color: #007bff;
+            background-color: #fff;
+            padding: 0 5px;
+            border-radius: 3px;
+        }
+    </style>
+</head>
+
+<body>
+    
+    <div class="container">
+        <h1>ฟอร์มตรวจเช็คถังดับเพลิง</h1>
+        <p id="fire-code">ชื่อถัง: <span id="fcode-display"></span></p>
+        <form id="evaluationForm" method="POST" enctype="multipart/form-data" action="evaluate_data.php">
+            <!-- Hidden field to store FCODE -->
+            <input type="hidden" id="fcode" name="fcode">
+            <!-- Date Input -->
+            <div class="form-group">
+                <label for="evaluationDate">วันที่และเวลา:</label>
+                <input type="datetime-local" id="evaluationDate" name="evaluationDate" >
+            </div>
+            <div class="form-group">
+                <label for="seal">ซีล:</label>
+                <ul class="radio-list">
+                    <li>
+                        <input type="radio" id="sealYes" name="seal" value="yes" >
+                        <label for="sealYes">Yes</label>
+                    </li>
+                    <li>
+                        <input type="radio" id="sealNo" name="seal" value="no" >
+                        <label for="sealNo">No</label>
+                    </li>
+                </ul>
+            </div>
+            <div class="form-group">
+                <label for="pressure">แรงดัน:</label>
+                <ul class="radio-list">
+                    <li>
+                        <input type="radio" id="pressureYes" name="pressure" value="yes" >
+                        <label for="pressureYes">Yes</label>
+                    </li>
+                    <li>
+                        <input type="radio" id="pressureNo" name="pressure" value="no" >
+                        <label for="pressureNo">No</label>
+                    </li>
+                </ul>
+            </div>
+            <div class="form-group">
+                <label for="hose">สายวัด:</label>
+                <ul class="radio-list">
+                    <li>
+                        <input type="radio" id="hoseYes" name="hose" value="yes" >
+                        <label for="hoseYes">Yes</label>
+                    </li>
+                    <li>
+                        <input type="radio" id="hoseNo" name="hose" value="no" >
+                        <label for="hoseNo">No</label>
+                    </li>
+                </ul>
+            </div>
+            <div class="form-group">
+                <label for="body">ตัวถัง:</label>
+                <ul class="radio-list">
+                    <li>
+                        <input type="radio" id="bodyYes" name="body" value="yes" >
+                        <label for="bodyYes">Yes</label>
+                    </li>
+                    <li>
+                        <input type="radio" id="bodyNo" name="body" value="no" >
+                        <label for="bodyNo">No</label>
+                    </li>
+                </ul>
+            </div>
+            <div class="form-group">
+                <label for="image">อัพโหลดรูปภาพ:</label>
+                <input type="file" id="image" name="image" accept="image/*" capture="camera" >
+                <label for="image" class="btn upload-btn">ถ่ายรูปหรือเลือกไฟล์</label>
+                <span id="file-name">ยังไม่ได้เลือกไฟล์</span>
+            </div>
+            <button type="submit" class="btn">ส่งข้อมูล</button>
+        </form>
+    </div>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+    // Extract FCODE from URL
+    const urlParams = new URLSearchParams(window.location.search);
+    const fcode = urlParams.get('data');
+
+    // Set the value in the form and display it
+    document.getElementById('fcode').value = fcode;
+    document.getElementById('fcode-display').textContent = fcode;
+
+    // Set the date input to today's date with time
+    const now = new Date();
+    const year = now.getFullYear();
+    const month = String(now.getMonth() + 1).padStart(2, '0');
+    const day = String(now.getDate()).padStart(2, '0');
+    const hours = String(now.getHours()).padStart(2, '0');
+    const minutes = String(now.getMinutes()).padStart(2, '0');
+
+    const dateTimeString = `${year}-${month}-${day}T${hours}:${minutes}`;
+    document.getElementById('evaluationDate').value = dateTimeString;
+
+    document.getElementById('evaluationForm').addEventListener('submit', function (event) {
+        const radioGroups = ['seal', 'pressure', 'hose', 'body'];
+        let allRadiosSelected = true;
+        let errorMessage = '';
+
+        radioGroups.forEach(group => {
+            const selected = document.querySelector(`input[name="${group}"]:checked`);
+            if (!selected) {
+                allRadiosSelected = false;
+            }
+        });
+
+        const imageInput = document.getElementById('image');
+        const imageUploaded = imageInput.files.length > 0;
+
+        const dateInput = document.getElementById('evaluationDate');
+        const selectedDate = dateInput.value;
+
+        if (allRadiosSelected && selectedDate) {
+            if (!imageUploaded) {
+                // Ask user if they are sure they want to submit without an image
+                Swal.fire({
+                    title: 'แน่ใจไหม?',
+                    text: 'คุณไม่ได้แนบรูปภาพ. คุณต้องการส่งข้อมูลนี้หรือไม่?',
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonText: 'ใช่, ส่ง',
+                    cancelButtonText: 'ไม่, ยกเลิก'
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        const formData = new FormData(this);
+
+                        if (imageUploaded) {
+                            const file = imageInput.files[0];
+                            const fileName = file.name;
+                            const fileExtension = fileName.substring(fileName.lastIndexOf('.'));
+                            const newFileName = `${fileName.substring(0, fileName.lastIndexOf('.'))}_${selectedDate}${fileExtension}`;
+                            const newFile = new File([file], newFileName, { type: file.type });
+                            formData.set('image', newFile);
+                        }
+
+                        Swal.fire({
+                            icon: 'success',
+                            title: 'สำเร็จ',
+                            text: 'ส่งข้อมูลสำเร็จ',
+                        }).then(() => {
+                            fetch('evaluate_data.php', {
+                                method: 'POST',
+                                body: formData
+                            })
+                            .then(response => {
+                                if (response.ok) {
+                                    window.location.href = 'index.php';
+                                } else {
+                                    Swal.fire({
+                                        icon: 'error',
+                                        title: 'เกิดข้อผิดพลาด',
+                                        text: 'ไม่สามารถส่งข้อมูลได้'
+                                    });
+                                }
+                            })
+                            .catch(error => {
+                                Swal.fire({
+                                    icon: 'error',
+                                    title: 'เกิดข้อผิดพลาด',
+                                    text: 'ไม่สามารถส่งข้อมูลได้'
+                                });
+                            });
+                        });
+                    }
+                });
+            } else {
+                const formData = new FormData(this);
+
+                const file = imageInput.files[0];
+                const fileName = file.name;
+                const fileExtension = fileName.substring(fileName.lastIndexOf('.'));
+                const newFileName = `${fileName.substring(0, fileName.lastIndexOf('.'))}_${selectedDate}${fileExtension}`;
+                const newFile = new File([file], newFileName, { type: file.type });
+                formData.set('image', newFile);
+
+                Swal.fire({
+                    icon: 'success',
+                    title: 'สำเร็จ',
+                    text: 'ส่งข้อมูลสำเร็จ',
+                }).then(() => {
+                    fetch('evaluate_data.php', {
+                        method: 'POST',
+                        body: formData
+                    })
+                    .then(response => {
+                        if (response.ok) {
+                            window.location.href = 'index.php';
+                        } else {
+                            Swal.fire({
+                                icon: 'error',
+                                title: 'เกิดข้อผิดพลาด',
+                                text: 'ไม่สามารถส่งข้อมูลได้'
+                            });
+                        }
+                    })
+                    .catch(error => {
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'เกิดข้อผิดพลาด',
+                            text: 'ไม่สามารถส่งข้อมูลได้'
+                        });
+                    });
+                });
+            }
+        } else {
+            if (!allRadiosSelected) {
+                errorMessage += 'กรุณาเลือกตัวเลือกทุกข้อ';
+            }
+            if (!selectedDate) {
+                errorMessage += errorMessage ? ' และกรุณาเลือกวันที่' : 'กรุณาเลือกวันที่';
+            }
+            Swal.fire({
+                icon: 'error',
+                title: 'ไม่ครบถ้วน',
+                text: errorMessage,
+            });
+        }
+
+        event.preventDefault();
+    });
+
+    document.getElementById('image').addEventListener('change', function () {
+        const fileName = this.files.length > 0 ? this.files[0].name : 'ยังไม่ได้เลือกไฟล์';
+        document.getElementById('file-name').textContent = fileName;
+    });
+});
+
+    </script>
+    
+</body>
+
+</html>

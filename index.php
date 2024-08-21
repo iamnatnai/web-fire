@@ -10,6 +10,7 @@ session_start();
     <link rel="stylesheet" href="navbar.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
+    <link rel="icon" href="/mick/my-php/favicon.ico" type="image/x-icon">
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <style>
         body {
@@ -47,9 +48,32 @@ session_start();
         .button:hover {
             background-color: #45a049;
         }
+        .btn {
+            display: inline-block;
+            padding: 15px 30px;
+            font-size: 18px;
+            color: #fff;
+            background-color: #41008b;
+            border: none;
+            border-radius: 8px;
+            text-decoration: none;
+            text-align: center;
+            cursor: pointer;
+            margin-top: 20px;
+            width: 100%;
+            transition: background-color 0.3s ease-in-out, transform 0.2s;
+        }
+
+        .btn:hover {
+            background-color: #7100b3;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        }
     </style>
 </head>
 <body>
+<div class="container">
+    </div>
     <?php if (!isset($_SESSION['user_id'])): ?>
         <script>
             Swal.fire({
@@ -64,15 +88,10 @@ session_start();
             });
         </script>
     <?php else: ?>
-        <div class="navbar">
-            <a href="index.php"><i class="fas fa-home"></i> Home</a>
-            <a href="evaluation_page.html"><i class="fas fa-clipboard-list"></i> Evaluation</a>
-            <a href="layer.php"><i class="fas fa-map-marker-alt"></i> Location</a>
-            <a href="scan.html"><i class="fas fa-qrcode"></i> Scan</a>
-        </div>
-        
+        <?php include 'navbar.php'; ?>
         <div class="container">
             <h1>Fire Extinguisher Data</h1>
+            <a href="download_checkyear.php" class="btn">ดาวน์โหลดรายงานรายปี</a>
             <h2>Welcome, <?php echo htmlspecialchars($_SESSION['username']); ?>!</h2>
             <a href="logout.php" class="button" style="background-color: #f44336;">Logout</a>
             <?php

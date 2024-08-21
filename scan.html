@@ -1,22 +1,15 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
   <meta charset="UTF-8">
-  <title>jsQR Demo</title>
+  <title>QR SCANNER</title>
   <script src="./jsQR.js"></script>
   <link rel="stylesheet" href="navbar.css">
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+  <link rel="icon" href="/mick/my-php/favicon.ico" type="image/x-icon">
   
 </head>
 
 <body>
-  <div class="navbar">
-    <a href="index.php"><i class="fas fa-home"></i> Home</a>
-    <a href="evaluation_page.html"><i class="fas fa-clipboard-list"></i> Evaluation</a>
-    <a href="layer.php"><i class="fas fa-map-marker-alt"></i> Location</a>
-    <a href="scan.html"><i class="fas fa-qrcode"></i> Scan</a>
-  </div>
   <div id="loadingMessage">🎥 Unable to access video stream (please make sure you have a webcam enabled)</div>
   <canvas id="canvas" hidden></canvas>
   <div id="output" hidden>
@@ -88,11 +81,11 @@
 })
 .then(response => response.text())
 .then(text => {
-    console.log('Server response:', text); // Log the server response for debugging
+    // Comment out or remove the console.log line
+    // console.log('Server response:', text);
     try {
         const result = JSON.parse(text);
         if (result.status === "found") {
-            // Redirect to the result page with the data
             window.location.href = `result_page.php?data=${encodeURIComponent(code.data)}`;
         } else if (result.status === "not_found") {
             outputMessage.innerText = "ไม่พบข้อมูลในฐานข้อมูล";
