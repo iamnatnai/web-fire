@@ -32,6 +32,7 @@ body {
     display: none; /* Hidden by default */
     flex-direction: column;
     cursor: pointer;
+    padding: 5px;
 }
 
 .navbar-toggle .bar {
@@ -50,6 +51,50 @@ body {
 .navbar-menu a {
     display: flex;
     align-items: center;
+}
+
+.navbar-progress {
+    display: flex;
+    align-items: center;
+    margin-left: auto;
+    padding: 0 20px;
+}
+
+.progress-label {
+    font-size: 14px;
+    color: #fff;
+    margin-right: 10px;
+    display: flex;
+    align-items: center;
+}
+
+.progress-label i {
+    margin-right: 5px; /* Adjust as needed */
+}
+
+.progress-bar-container {
+    width: 200px;
+    height: 20px;
+    background: #ddd;
+    border-radius: 10px;
+    margin-right: 10px;
+    position: relative;
+}
+
+.progress-bar {
+    height: 100%;
+    width: 0;
+    background: #4caf50;
+    border-radius: 10px;
+    position: absolute;
+    top: 0;
+    left: 0;
+    transition: width 0.3s;
+}
+
+.progress-text {
+    font-size: 14px;
+    color: #fff;
 }
 
 /* Mobile Styles */
@@ -84,24 +129,3 @@ body {
         transform: rotate(-45deg) translate(7px, -8px); /* Rotate bottom bar */
     }
 }
-
-#canvas {
-    position: absolute; /* ใช้ position absolute เพื่อให้อยู่เหนือวิดีโอ */
-    top: 0;
-    left: 0;
-    width: 100%; /* ทำให้ canvas ขนาดเท่ากับวิดีโอ */
-    height: 100%;
-    pointer-events: none; /* ทำให้ canvas ไม่รับการคลิก */
-    z-index: 10; /* ทำให้ canvas อยู่บนสุด */
-  }
-  
-  #output {
-    position: absolute; /* ใช้ position absolute เพื่อให้อยู่เหนือวิดีโอ */
-    top: 0;
-    left: 0;
-    width: 100%;
-    text-align: center;
-    color: #fff;
-    font-size: 24px;
-    z-index: 20; /* ทำให้ output อยู่บนสุด */
-  }
