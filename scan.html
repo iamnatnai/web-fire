@@ -4,9 +4,37 @@
   <meta charset="UTF-8">
   <title>QR SCANNER</title>
   <script src="./jsQR.js"></script>
-  <link rel="stylesheet" href="navbar.css">
   <link rel="icon" href="/mick/my-php/favicon.ico" type="image/x-icon">
-  
+  <style>
+    body, html {
+      margin: 0;
+      padding: 0;
+      height: 100%;
+      width: 100%;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      background-color: #000; /* Black background for better video visibility */
+    }
+
+    canvas {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      object-fit: cover; /* Ensures the video covers the entire canvas */
+    }
+
+    #loadingMessage {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      color: white;
+      font-size: 1.5em;
+    }
+  </style>
 </head>
 
 <body>
@@ -16,6 +44,7 @@
     <div id="outputMessage">No QR code detected.</div>
     <div hidden><b>Data:</b> <span id="outputData"></span></div>
   </div>
+
   <script>
     var video = document.createElement("video");
     var canvasElement = document.getElementById("canvas");
@@ -41,10 +70,10 @@
       requestAnimationFrame(tick);
     });
 
-    var hasScanned = false; // ตัวแปรเพื่อควบคุมการสแกนครั้งเดียว
+    var hasScanned = false;
 
     function tick() {
-      if (hasScanned) return; // หยุดการทำงานถ้าได้สแกนแล้ว
+      if (hasScanned) return;
 
       loadingMessage.innerText = "⌛ Loading video...";
       if (video.readyState === video.HAVE_ENOUGH_DATA) {
@@ -52,56 +81,53 @@
         canvasElement.hidden = false;
         outputContainer.hidden = false;
 
-        canvasElement.height = video.videoHeight;
-        canvasElement.width = video.videoWidth;
+        // Set canvas size to full viewport
+        canvasElement.width = window.innerWidth;
+        canvasElement.height = window.innerHeight;
+
         canvas.drawImage(video, 0, 0, canvasElement.width, canvasElement.height);
         var imageData = canvas.getImageData(0, 0, canvasElement.width, canvasElement.height);
         var code = jsQR(imageData.data, imageData.width, imageData.height, {
           inversionAttempts: "dontInvert",
         });
         if (code) {
-          drawLine(code.location.topLeftCorner, code.location.topRightCorner, "#FF3B58");
-          drawLine(code.location.topRightCorner, code.location.bottomRightCorner, "#FF3B58");
-          drawLine(code.location.bottomRightCorner, code.location.bottomLeftCorner, "#FF3B58");
-          drawLine(code.location.bottomLeftCorner, code.location.topLeftCorner, "#FF3B58");
+          drawLine(code.location.topLeftCorner, code.location.topRightCorner, "#d13bff");
+          drawLine(code.location.topRightCorner, code.location.bottomRightCorner, "#d13bff");
+          drawLine(code.location.bottomRightCorner, code.location.bottomLeftCorner, "#d13bff");
+          drawLine(code.location.bottomLeftCorner, code.location.topLeftCorner, "#d13bff");
           outputMessage.hidden = true;
           outputData.parentElement.hidden = false;
           outputData.innerText = code.data;
 
-          // ตั้งค่าสถานะการสแกนให้เป็นจริงเพื่อหยุดการทำงาน
           hasScanned = true;
 
-          // ส่งข้อมูล QR Code ไปยังเซิร์ฟเวอร์
           fetch("https://kasemradpcc.com/mick/my-php/process_qr.php", {
-    method: 'POST',
-    headers: {
-        'Content-Type': 'application/x-www-form-urlencoded',
-    },
-    body: 'qrData=' + encodeURIComponent(code.data)
-})
-.then(response => response.text())
-.then(text => {
-    // Comment out or remove the console.log line
-    // console.log('Server response:', text);
-    try {
-        const result = JSON.parse(text);
-        if (result.status === "found") {
-            window.location.href = `result_page.php?data=${encodeURIComponent(code.data)}`;
-        } else if (result.status === "not_found") {
-            outputMessage.innerText = "ไม่พบข้อมูลในฐานข้อมูล";
-        } else if (result.status === "error") {
-            outputMessage.innerText = "เกิดข้อผิดพลาด: " + result.message;
-        }
-    } catch (e) {
-        console.error('Error parsing JSON:', e);
-        outputMessage.innerText = "เกิดข้อผิดพลาดในการประมวลผลข้อมูล";
-    }
-})
-.catch(error => {
-    console.error('Error:', error);
-    outputMessage.innerText = "เกิดข้อผิดพลาดในการส่งข้อมูลไปยังเซิร์ฟเวอร์";
-});
-
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded',
+            },
+            body: 'qrData=' + encodeURIComponent(code.data)
+          })
+          .then(response => response.text())
+          .then(text => {
+              try {
+                  const result = JSON.parse(text);
+                  if (result.status === "found") {
+                      window.location.href = `result_page.php?data=${encodeURIComponent(code.data)}`;
+                  } else if (result.status === "not_found") {
+                      outputMessage.innerText = "ไม่พบข้อมูลในฐานข้อมูล";
+                  } else if (result.status === "error") {
+                      outputMessage.innerText = "เกิดข้อผิดพลาด: " + result.message;
+                  }
+              } catch (e) {
+                  console.error('Error parsing JSON:', e);
+                  outputMessage.innerText = "เกิดข้อผิดพลาดในการประมวลผลข้อมูล";
+              }
+          })
+          .catch(error => {
+              console.error('Error:', error);
+              outputMessage.innerText = "เกิดข้อผิดพลาดในการส่งข้อมูลไปยังเซิร์ฟเวอร์";
+          });
         }
       }
       requestAnimationFrame(tick);

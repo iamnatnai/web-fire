@@ -1,3 +1,19 @@
+<?php
+session_start();
+if (!isset($_SESSION['user_id'])): ?>
+    <script>
+        Swal.fire({
+            icon: 'error',
+            title: 'Access Denied',
+            text: 'You need to login to access this page.',
+            confirmButtonText: 'OK'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                window.location.href = 'login.html';
+            }
+        });
+    </script>
+<?php else: ?>
 <!DOCTYPE html>
 <html lang="en">
 
@@ -234,6 +250,7 @@
     
     <div class="container">
         <h1>ฟอร์มตรวจเช็คถังดับเพลิง</h1>
+        <h2>ผู้ประเมิน: <?php echo htmlspecialchars($_SESSION['firstname']); ?></h2> <!-- Display the evaluator's name here -->
         <p id="fire-code">ชื่อถัง: <span id="fcode-display"></span></p>
         <form id="evaluationForm" method="POST" enctype="multipart/form-data" action="evaluate_data.php">
             <!-- Hidden field to store FCODE -->
@@ -248,11 +265,11 @@
                 <ul class="radio-list">
                     <li>
                         <input type="radio" id="sealYes" name="seal" value="yes" >
-                        <label for="sealYes">Yes</label>
+                        <label for="sealYes">ผ่าน</label>
                     </li>
                     <li>
                         <input type="radio" id="sealNo" name="seal" value="no" >
-                        <label for="sealNo">No</label>
+                        <label for="sealNo">ไม่ผ่าน</label>
                     </li>
                 </ul>
             </div>
@@ -261,11 +278,11 @@
                 <ul class="radio-list">
                     <li>
                         <input type="radio" id="pressureYes" name="pressure" value="yes" >
-                        <label for="pressureYes">Yes</label>
+                        <label for="pressureYes">ผ่าน</label>
                     </li>
                     <li>
                         <input type="radio" id="pressureNo" name="pressure" value="no" >
-                        <label for="pressureNo">No</label>
+                        <label for="pressureNo">ไม่ผ่าน</label>
                     </li>
                 </ul>
             </div>
@@ -274,11 +291,11 @@
                 <ul class="radio-list">
                     <li>
                         <input type="radio" id="hoseYes" name="hose" value="yes" >
-                        <label for="hoseYes">Yes</label>
+                        <label for="hoseYes">ผ่าน</label>
                     </li>
                     <li>
                         <input type="radio" id="hoseNo" name="hose" value="no" >
-                        <label for="hoseNo">No</label>
+                        <label for="hoseNo">ไม่ผ่าน</label>
                     </li>
                 </ul>
             </div>
@@ -287,11 +304,11 @@
                 <ul class="radio-list">
                     <li>
                         <input type="radio" id="bodyYes" name="body" value="yes" >
-                        <label for="bodyYes">Yes</label>
+                        <label for="bodyYes">ผ่าน</label>
                     </li>
                     <li>
                         <input type="radio" id="bodyNo" name="body" value="no" >
-                        <label for="bodyNo">No</label>
+                        <label for="bodyNo">ไม่ผ่าน</label>
                     </li>
                 </ul>
             </div>
@@ -350,7 +367,7 @@
                 Swal.fire({
                     title: 'แน่ใจไหม?',
                     text: 'คุณไม่ได้แนบรูปภาพ. คุณต้องการส่งข้อมูลนี้หรือไม่?',
-                    icon: 'warning',
+                    icon: '"question"',
                     showCancelButton: true,
                     confirmButtonText: 'ใช่, ส่ง',
                     cancelButtonText: 'ไม่, ยกเลิก'
@@ -464,3 +481,4 @@
 </body>
 
 </html>
+<?php endif; ?>

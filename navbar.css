@@ -93,7 +93,7 @@ body {
 }
 
 .progress-text {
-    font-size: 14px;
+    font-size: 18px;
     color: #fff;
 }
 
@@ -124,6 +124,15 @@ body {
     .navbar-toggle.active .bar:nth-child(1) {
         transform: rotate(45deg) translate(5px, 6px); /* Rotate top bar */
     }
+    #canvas {
+        position: absolute; /* ใช้ position absolute เพื่อให้อยู่เหนือวิดีโอ */
+        top: 0;
+        left: 0;
+        width: 100%; /* ทำให้ canvas ขนาดเท่ากับวิดีโอ */
+        height: 100%;
+        pointer-events: none; /* ทำให้ canvas ไม่รับการคลิก */
+        z-index: 10; /* ทำให้ canvas อยู่บนสุด */
+      }
 
     .navbar-toggle.active .bar:nth-child(3) {
         transform: rotate(-45deg) translate(7px, -8px); /* Rotate bottom bar */

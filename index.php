@@ -87,9 +87,80 @@ $endYear = $currentYear; // Use current year
 $validYears = array_filter($years, function($year) use ($startYear, $endYear) {
     return $year >= $startYear && $year <= $endYear;
 });
+$chartData = [];
+$columns = ['seal', 'pressure', 'hose', 'body'];
+
+// Initialize data structure
+foreach ($columns as $column) {
+    $chartData[$column] = ['yes' => 0, 'no' => 0];
+}
+
+// Build query conditions
+$chartQueryConditions = $queryConditions;
+$queryConditionChart = implode(' AND ', $chartQueryConditions);
+if ($queryConditionChart) {
+    $queryConditionChart = 'WHERE ' . $queryConditionChart;
+}
+
+// Fetch chart data
+foreach ($columns as $column) {
+    $sqlColumn = "SELECT $column, COUNT(*) as count FROM evaluations 
+                  JOIN fire_extinguisher ON evaluations.FCODE = fire_extinguisher.FCODE 
+                  $queryConditionChart 
+                  GROUP BY $column";
+    
+    $resultChart = $conn->query($sqlColumn);
+    if (!$resultChart) {
+        die("Query failed: " . $conn->error);
+    }
+    
+    while ($rowChart = $resultChart->fetch_assoc()) {
+        $value = $rowChart[$column];
+        if ($value === 'yes') {
+            $chartData[$column]['yes'] += $rowChart['count'];
+        } else if ($value === 'no') {
+            $chartData[$column]['no'] += $rowChart['count'];
+        }
+    }
+}
+
+// Find FCODEs with "no"
+$noFcodes = [];
+$columns = ['seal', 'pressure', 'hose', 'body']; // Columns to check
+
+foreach ($columns as $column) {
+    // Construct the SQL query
+    $sql = "SELECT evaluations.FCODE 
+            FROM evaluations 
+            JOIN fire_extinguisher ON evaluations.FCODE = fire_extinguisher.FCODE ";
+    
+    if (!empty($queryConditionChart)) {
+        $sql .= "$queryConditionChart AND evaluations.$column = 'no'";
+    } else {
+        $sql .= "WHERE evaluations.$column = 'no'";
+    }
+
+    // Execute the query
+    $result = $conn->query($sql);
+    if (!$result) {
+        die("Query failed: " . $conn->error);
+    }
+
+    // Add all FCODEs with 'no' to the array
+    while ($row = $result->fetch_assoc()) {
+        $noFcodes[] = $row['FCODE'];
+    }
+}
 
 
+// Remove duplicates and convert to JSON
+$noFcodes = array_unique($noFcodes);
+$noFcodesJson = json_encode($noFcodes);
+
+
+// Close the connection
 $conn->close();
+
 ?>
 
 <!DOCTYPE html>
@@ -209,7 +280,7 @@ $conn->close();
         <img src="/mick/my-php/home-icon.png" alt="Home Icon" class="large-icon">
             </div>
             <h1>หน้าหลัก ระบบตรวจสอบถังดับเพลิง</h1>
-            <h2>ยินดีต้อนรับ! คุณ<?php echo htmlspecialchars($_SESSION['username']); ?>!</h2>
+            <h2>ยินดีต้อนรับ! คุณ<?php echo htmlspecialchars($_SESSION['firstname']); ?>!</h2>
             <a href="download_checkyear.php" class="btn">ดาวน์โหลดรายงานประจำปี</a>
             <h2>เลือกการค้นหา</h2>
 
@@ -297,65 +368,157 @@ $conn->close();
                 ?>
                 
             </div>
-
+            <h2>เปอร์เซ็นต์การตรวจสอบ</h2>
             <canvas id="myPieChart"></canvas>
+            <h2>สถิติการตรวจสอบ (Yes/No)</h2>
+            <canvas id="myBarChart"></canvas>
+            <div id="fcode-list">
+        <h3>รายการถังที่มีค่าไม่ผ่าน</h3>
+        <ul id="fcode-list-items"></ul>
+    </div>
             <a href="logout.php" class="button" id="logoutButton" style="background-color: #f44336;">Logout</a>
         </div>
 
         <script>
-           
-    document.addEventListener('DOMContentLoaded', function() {
-        var totalCount = <?php echo $totalCount; ?>;
-        var evaluatedCount = <?php echo $evaluatedCount; ?>;
-        var notEvaluatedCount = totalCount - evaluatedCount;
-        var percentage = (totalCount > 0) ? ((evaluatedCount / totalCount) * 100).toFixed(2) : 'N/A';
+        document.addEventListener('DOMContentLoaded', function() {
+    // Initialize or destroy existing charts
+    var pieChartCanvas = document.getElementById('myPieChart');
+    var barChartCanvas = document.getElementById('myBarChart');
 
-        var ctx = document.getElementById('myPieChart').getContext('2d');
-        var myPieChart = new Chart(ctx, {
-            type: 'pie',
-            data: {
-                labels: ['Evaluated', 'Not Evaluated'],
-                datasets: [{
-                    data: [evaluatedCount, notEvaluatedCount],
-                    backgroundColor: ['#4CAF50', '#FF5733'],
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false, // Allows the chart to resize based on its container
-                plugins: {
-                    tooltip: {
-                        callbacks: {
-                            label: function(context) {
-                                var label = context.label || '';
-                                var value = context.raw || 0;
-                                var percentage = (totalCount > 0) ? ((value / totalCount) * 100).toFixed(2) : 'N/A';
-                                return label + ': ' + value + ' (' + percentage + '%)';
-                            }
+    // Destroy existing charts if they exist
+    if (pieChartCanvas.chart) {
+        pieChartCanvas.chart.destroy();
+    }
+    if (barChartCanvas.chart) {
+        barChartCanvas.chart.destroy();
+    }
+
+    var totalCount = <?php echo $totalCount; ?>;
+    var evaluatedCount = <?php echo $evaluatedCount; ?>;
+    var notEvaluatedCount = totalCount - evaluatedCount;
+    var percentage = (totalCount > 0) ? ((evaluatedCount / totalCount) * 100).toFixed(2) : 'N/A';
+
+    var ctxPie = pieChartCanvas.getContext('2d');
+    var myPieChart = new Chart(ctxPie, {
+        type: 'pie',
+        data: {
+            labels: ['Evaluated', 'Not Evaluated'],
+            datasets: [{
+                data: [evaluatedCount, notEvaluatedCount],
+                backgroundColor: ['#4CAF50', '#FF5733'],
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                tooltip: {
+                    callbacks: {
+                        label: function(context) {
+                            var label = context.label || '';
+                            var value = context.raw || 0;
+                            var percentage = (totalCount > 0) ? ((value / totalCount) * 100).toFixed(2) : 'N/A';
+                            return label + ': ' + value + ' (' + percentage + '%)';
                         }
                     }
                 }
             }
+        }
+    });
+
+    document.getElementById('logoutButton').addEventListener('click', function(event) {
+        event.preventDefault();
+        Swal.fire({
+            title: 'คุณต้องการออกจากระบบใช่ไหม?',
+            text: "การออกจากระบบจะสิ้นสุดการทำงานของคุณ",
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#d33',
+            cancelButtonColor: '#3085d6',
+            confirmButtonText: 'ใช่, ออกจากระบบ!',
+            cancelButtonText: 'ยกเลิก'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                window.location.href = 'logout.php';
+            }
         });
     });
-    document.getElementById('logoutButton').addEventListener('click', function(event) {
-                event.preventDefault(); // Prevent default action
-                Swal.fire({
-                    title: 'คุณต้องการออกจากระบบใช่ไหม?',
-                    text: "การออกจากระบบจะสิ้นสุดการทำงานของคุณ",
-                    icon: 'warning',
-                    showCancelButton: true,
-                    confirmButtonColor: '#3085d6',
-                    cancelButtonColor: '#d33',
-                    confirmButtonText: 'ใช่, ออกจากระบบ!',
-                    cancelButtonText: 'ยกเลิก'
-                }).then((result) => {
-                    if (result.isConfirmed) {
-                        window.location.href = 'logout.php'; // Redirect to logout.php if confirmed
+
+    // Initialize bar chart
+    var chartData = <?php echo json_encode($chartData); ?>;
+    var fcodeList = <?php echo $noFcodesJson; ?>; // Ensure this is properly included
+    var labels = Object.keys(chartData);
+    var yesData = labels.map(label => chartData[label]['yes']);
+    var noData = labels.map(label => chartData[label]['no']);
+
+    var ctxBar = barChartCanvas.getContext('2d');
+    var myBarChart = new Chart(ctxBar, {
+        type: 'bar',
+        data: {
+            labels: labels,
+            datasets: [
+                {
+                    label: 'ผ่าน',
+                    data: yesData,
+                    backgroundColor: 'rgba(76, 175, 80, 0.5)',
+                    borderColor: 'rgba(76, 175, 80, 1)',
+                    borderWidth: 1
+                },
+                {
+                    label: 'ไม่ผ่าน',
+                    data: noData,
+                    backgroundColor: 'rgba(255, 87, 51, 0.5)',
+                    borderColor: 'rgba(255, 87, 51, 1)',
+                    borderWidth: 1
+                }
+            ]
+        },
+        options: {
+            responsive: true,
+            scales: {
+                x: {
+                    title: {
+                        display: true,
+                        text: 'Evaluation Criteria'
                     }
-                });
-            });
-</script>
+                },
+                y: {
+                    title: {
+                        display: true,
+                        text: 'Count'
+                    },
+                    beginAtZero: true
+                }
+            }
+        }
+    });
+     // Display FCODE list
+     console.log(fcodeList);
+
+    // ถ้า fcodeList เป็นวัตถุ
+    if (typeof fcodeList === 'object' && !Array.isArray(fcodeList)) {
+        // แปลงวัตถุเป็นอาร์เรย์
+        fcodeList = Object.values(fcodeList);
+    }
+
+    var fcodeListItems = document.getElementById('fcode-list-items');
+    if (Array.isArray(fcodeList) && fcodeList.length > 0) {
+        fcodeList.forEach(function(fcode) {
+            var listItem = document.createElement('li');
+            listItem.textContent = fcode;
+            fcodeListItems.appendChild(listItem);
+        });
+    } else {
+        fcodeListItems.textContent = "ไม่พบข้อมูล";
+    }
+});
+console.log('Chart Data:', chartData);
+console.log('Yes Data:', yesData);
+console.log('No Data:', noData);
+
+
+var chartData = <?php echo json_encode($chartData); ?>;
+    </script>
     <?php endif; ?>
     
 </body>
