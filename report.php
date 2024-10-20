@@ -55,7 +55,7 @@ if ($conn->connect_error) {
 }
 
 // Fetch data for fire extinguishers, sorted by F_Tank
-$sql = "SELECT fe.fcode, fe.F_Tank, fe.F_located, fe.F_water, e.date_make, e.seal, e.pressure, e.hose, e.body,e.construct, e.comment, e.evaluator, e.w_glass, e.w_val, e.w_hose, e.w_construct,e.image
+$sql = "SELECT fe.fcode, fe.F_Tank, fe.F_located, fe.F_water, e.date_make, e.seal, e.pressure, e.hose, e.body, e.comment, e.evaluator, e.w_glass, e.w_val, e.w_hose, e.w_construct,e.image
         FROM fire_extinguisher fe
         JOIN evaluations e ON fe.fcode = e.fcode
         ORDER BY fe.F_Tank ASC, fe.fcode ASC, e.date_make ASC"; // Sorting by F_Tank first
@@ -114,11 +114,11 @@ foreach ($dataByFTank as $fTank => $entries) {
     $newSheet->setTitle($sheetName);
 
     // Set headers for the new sheet
-    $headers = ['ลำดับ', 'FCODE', 'วันที่และเวลาตรวจสอบ', 'คันบังคับ/สลัก', 'แรงดัน', 'สายวัด', 'ตัวถัง','สิ่งกีดขวางถัง'];
+    $headers = ['ลำดับ', 'FCODE', 'วันที่และเวลาตรวจสอบ', 'ซีล', 'แรงดัน', 'สายวัด', 'ตัวถัง'];
 
     // Check if F_water is present and add water-related headers
     if ($entries[0]['fWaterPresent']) {
-        array_push($headers, 'กระจก / ประตู', 'วาล์ว', 'หัวฉีด', 'สิ่งกีดขวางตู้');
+        array_push($headers, 'กระจก / ประตู', 'วาล์ว', 'หัวฉีด', 'สิ่งกีดขวาง');
     }
 
     // Add comment and evaluator columns to the end
@@ -139,21 +139,15 @@ foreach ($dataByFTank as $fTank => $entries) {
             $index + 1, // ลำดับ
             $entry['fcode'],
             $formattedDate,
-            $entry['seal'] === 'yes' ? 'ปกติ' : 'ชำรุด', // คันบังคับ/สลัก
-            $entry['pressure'] === 'yes' ? 'ปกติ' : 'ชำรุด', // แรงดัน
-            $entry['hose'] === 'yes' ? 'ปกติ' : 'ชำรุด', // สายวัด
-            $entry['body'] === 'yes' ? 'ปกติ' : 'ชำรุด', // ตัวถัง
-            $entry['construct'] === 'yes' ? 'ปกติ(ไม่พบสิ่งกีดขวาง)' : 'ไม่ปกติ(พบสิ่งกีดขวาง)' // สิ่งกีดขวางถัง
+            $entry['seal'],
+            $entry['pressure'],
+            $entry['hose'],
+            $entry['body']
         ];
 
         // If F_water is present, add the water-related data
         if ($entry['fWaterPresent']) {
-            array_push($rowData, 
-                $entry['w_glass'] === 'yes' ? 'ปกติ' : 'ชำรุด', 
-                $entry['w_val'] === 'yes' ? 'ปกติ' : 'ชำรุด', 
-                $entry['w_hose'] === 'yes' ? 'ปกติ' : 'ชำรุด', 
-                $entry['w_construct']  === 'yes' ? 'ปกติ(ไม่พบสิ่งกีดขวาง)' : 'ไม่ปกติ(พบสิ่งกีดขวาง)'
-            );
+            array_push($rowData, $entry['w_glass'], $entry['w_val'], $entry['w_hose'], $entry['w_construct']);
         }
 
         // Add comment and evaluator to the end

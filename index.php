@@ -16,17 +16,7 @@ function getDistinctValues($conn, $column, $table) {
 }
 
 // Database connection
-$servername = "localhost";
-$username = "kasemra2_dcc";
-$password = "123456";
-$dbname = "kasemra2_dcc";
-
-$conn = new mysqli($servername, $username, $password, $dbname);
-
-// Check connection
-if ($conn->connect_error) {
-    die("Connection failed: " . $conn->connect_error);
-}
+include 'config.php';
 
 // Fetch distinct months, years, and layers
 $months = getDistinctValues($conn, 'MONTH(date_make)', 'evaluations');
@@ -88,11 +78,17 @@ $validYears = array_filter($years, function($year) use ($startYear, $endYear) {
     return $year >= $startYear && $year <= $endYear;
 });
 $chartData = [];
-$columns = ['seal', 'pressure', 'hose', 'body'];
+$columns = [
+    'seal' => 'คันบังคับ/สลัก',
+    'pressure' => 'ความดันน้ำ',
+    'hose' => 'สายยาง',
+    'body' => 'ตัวถัง',
+    'construct' => 'สิ่งกีดขวางถัง',
+];
 
 // Initialize data structure
-foreach ($columns as $column) {
-    $chartData[$column] = ['yes' => 0, 'no' => 0];
+foreach ($columns as $column => $thaiName) {
+    $chartData[$thaiName] = ['yes' => 0, 'no' => 0];
 }
 
 // Build query conditions
@@ -103,7 +99,7 @@ if ($queryConditionChart) {
 }
 
 // Fetch chart data
-foreach ($columns as $column) {
+foreach ($columns as $column => $thaiName) {
     $sqlColumn = "SELECT $column, COUNT(*) as count FROM evaluations 
                   JOIN fire_extinguisher ON evaluations.FCODE = fire_extinguisher.FCODE 
                   $queryConditionChart 
@@ -117,20 +113,64 @@ foreach ($columns as $column) {
     while ($rowChart = $resultChart->fetch_assoc()) {
         $value = $rowChart[$column];
         if ($value === 'yes') {
-            $chartData[$column]['yes'] += $rowChart['count'];
+            $chartData[$thaiName]['yes'] += $rowChart['count'];
         } else if ($value === 'no') {
-            $chartData[$column]['no'] += $rowChart['count'];
+            $chartData[$thaiName]['no'] += $rowChart['count'];
+        }
+    }
+}
+// Define columns for the new chart
+
+$newChartColumns = [
+    'w_glass' => 'กระจก / ประตู:',
+    'w_val' => 'วาล์ว',
+    'w_hose' => 'หัวฉีด',
+    'w_construct' => 'สิ่งกีดขวางตู้',
+];
+
+// Initialize new chart data structure
+$newChartData = [];
+foreach ($newChartColumns as $column => $label) {
+    $newChartData[$label] = ['yes' => 0, 'no' => 0];
+}
+
+// Build query conditions for the new chart
+$newChartQueryConditions = $queryConditions;
+$queryConditionNewChart = implode(' AND ', $newChartQueryConditions);
+if ($queryConditionNewChart) {
+    $queryConditionNewChart = 'WHERE ' . $queryConditionNewChart;
+}
+
+// Fetch new chart data
+foreach ($newChartColumns as $column => $label) {
+    $sqlNewColumn = "SELECT $column, COUNT(*) as count FROM evaluations 
+                     JOIN fire_extinguisher ON evaluations.FCODE = fire_extinguisher.FCODE 
+                     $queryConditionNewChart 
+                     GROUP BY $column";
+    
+    $resultNewChart = $conn->query($sqlNewColumn);
+    if (!$resultNewChart) {
+        die("Query failed: " . $conn->error);
+    }
+    
+    while ($rowNewChart = $resultNewChart->fetch_assoc()) {
+        $value = $rowNewChart[$column];
+        if ($value === 'yes') {
+            $newChartData[$label]['yes'] += $rowNewChart['count'];
+        } else if ($value === 'no') {
+            $newChartData[$label]['no'] += $rowNewChart['count'];
         }
     }
 }
 
+
 // Find FCODEs with "no"
 $noFcodes = [];
-$columns = ['seal', 'pressure', 'hose', 'body']; // Columns to check
+$columns = ['seal', 'pressure', 'hose', 'body', 'construct']; // Columns to check
 
 foreach ($columns as $column) {
     // Construct the SQL query
-    $sql = "SELECT evaluations.FCODE 
+    $sql = "SELECT fire_extinguisher.F_Tank, evaluations.FCODE, fire_extinguisher.F_layer, fire_extinguisher.F_located
             FROM evaluations 
             JOIN fire_extinguisher ON evaluations.FCODE = fire_extinguisher.FCODE ";
     
@@ -148,14 +188,143 @@ foreach ($columns as $column) {
 
     // Add all FCODEs with 'no' to the array
     while ($row = $result->fetch_assoc()) {
-        $noFcodes[] = $row['FCODE'];
+        $fcodeInfo = [
+            'FCODE' => $row['FCODE'],
+            'F_Tank' => $row['F_Tank'],
+            'F_layer' => $row['F_layer'],
+            'F_located' => $row['F_located']
+        ];
+        $noFcodes[] = $fcodeInfo;
     }
 }
 
+// Remove duplicates based on FCODE
+$noFcodes = array_unique($noFcodes, SORT_REGULAR);
 
-// Remove duplicates and convert to JSON
-$noFcodes = array_unique($noFcodes);
+// Convert to JSON
 $noFcodesJson = json_encode($noFcodes);
+
+
+// Find FCODEs with "no"
+$nowaterFcodes = [];
+$columns = ['w_glass','w_val','w_hose','w_construct']; // Columns to check
+
+foreach ($columns as $column) {
+    // Construct the SQL query
+    $sql = "SELECT fire_extinguisher.F_Tank, evaluations.FCODE, fire_extinguisher.F_layer, fire_extinguisher.F_located
+            FROM evaluations 
+            JOIN fire_extinguisher ON evaluations.FCODE = fire_extinguisher.FCODE ";
+    
+    if (!empty($queryConditionChart)) {
+        $sql .= "$queryConditionChart AND evaluations.$column = 'no'";
+    } else {
+        $sql .= "WHERE evaluations.$column = 'no'";
+    }
+
+    // Execute the query
+    $result = $conn->query($sql);
+    if (!$result) {
+        die("Query failed: " . $conn->error);
+    }
+
+    // Add all FCODEs with 'no' to the array
+    while ($row = $result->fetch_assoc()) {
+        $waterfcodeInfo = [
+            'FCODE' => $row['FCODE'],
+            'F_Tank' => $row['F_Tank'],
+            'F_layer' => $row['F_layer'],
+            'F_located' => $row['F_located']
+        ];
+        $nowaterFcodes[] = $waterfcodeInfo;
+    }
+}
+
+// Remove duplicates based on FCODE
+$nowaterFcodes = array_unique($nowaterFcodes, SORT_REGULAR);
+
+// Convert to JSON
+$nowaterFcodesJson = json_encode($nowaterFcodes);
+
+// Debug or Display data
+// foreach ($noFcodes as $fcode) {
+//     echo "ถังลำดับที่: {$fcode['F_Tank']} อยู่ชั้นที่: {$fcode['F_layer']}, ตำแหน่งที่: {$fcode['F_located']}<br>";
+// }
+
+$yesFcodes = [];
+$columns = ['seal', 'pressure', 'hose', 'body', 'construct']; // Columns to check for 'yes'
+
+// Construct the SQL query for "yes"
+$sql = "SELECT fire_extinguisher.F_Tank, evaluations.FCODE, fire_extinguisher.F_layer, fire_extinguisher.F_located
+        FROM evaluations 
+        JOIN fire_extinguisher ON evaluations.FCODE = fire_extinguisher.FCODE ";
+
+if (!empty($queryConditionChart)) {
+    $sql .= "$queryConditionChart AND " . implode(" = 'yes' AND ", $columns) . " = 'yes'";
+} else {
+    $sql .= "WHERE " . implode(" = 'yes' AND ", $columns) . " = 'yes'";
+}
+
+// Execute the query
+$result = $conn->query($sql);
+if (!$result) {
+    die("Query failed: " . $conn->error);
+}
+
+// Add all FCODEs with 'yes' for all columns to the array
+while ($row = $result->fetch_assoc()) {
+    $fcodeInfo = [
+        'FCODE' => $row['FCODE'],
+        'F_Tank' => $row['F_Tank'],
+        'F_layer' => $row['F_layer'],
+        'F_located' => $row['F_located']
+    ];
+    $yesFcodes[] = $fcodeInfo;
+}
+
+// Remove duplicates based on FCODE
+$yesFcodes = array_unique($yesFcodes, SORT_REGULAR);
+
+// Convert to JSON
+$yesFcodesJson = json_encode($yesFcodes);
+
+
+$yesWaterFcodes = [];
+$columns = ['w_glass', 'w_val', 'w_hose', 'w_construct']; // Columns to check for 'yes'
+
+// Construct the SQL query for "yes"
+$sql = "SELECT fire_extinguisher.F_Tank, evaluations.FCODE, fire_extinguisher.F_layer, fire_extinguisher.F_located
+        FROM evaluations 
+        JOIN fire_extinguisher ON evaluations.FCODE = fire_extinguisher.FCODE ";
+
+if (!empty($queryConditionNewChart)) {
+    $sql .= "$queryConditionNewChart AND " . implode(" = 'yes' AND ", $columns) . " = 'yes'";
+} else {
+    $sql .= "WHERE " . implode(" = 'yes' AND ", $columns) . " = 'yes'";
+}
+
+// Execute the query
+$result = $conn->query($sql);
+if (!$result) {
+    die("Query failed: " . $conn->error);
+}
+
+// Add all FCODEs with 'yes' for all columns to the array
+while ($row = $result->fetch_assoc()) {
+    $waterfcodeInfo = [
+        'FCODE' => $row['FCODE'],
+        'F_Tank' => $row['F_Tank'],
+        'F_layer' => $row['F_layer'],
+        'F_located' => $row['F_located']
+    ];
+    $yesWaterFcodes[] = $waterfcodeInfo;
+}
+
+// Remove duplicates based on FCODE
+$yesWaterFcodes = array_unique($yesWaterFcodes, SORT_REGULAR);
+
+// Convert to JSON
+$yesWaterFcodesJson = json_encode($yesWaterFcodes);
+
 
 
 // Close the connection
@@ -172,7 +341,7 @@ $conn->close();
     <link rel="stylesheet" href="navbar.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
-    <link rel="icon" href="/mick/my-php/favicon.ico" type="image/x-icon">
+    <link rel="icon" href="/hos/fire_ex/favicon.ico" type="image/x-icon">
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
@@ -240,7 +409,8 @@ $conn->close();
             width: 100%;
         }
         .description {
-            font-size: 16px;
+            font-size: 26px;
+            border: 16px;
             margin-top: 20px;
             color: #333;
         }
@@ -256,6 +426,27 @@ $conn->close();
             height: auto; /* Maintain aspect ratio */
             margin: 0 auto 20px; /* Center the image and add margin below */
         }
+        ul {
+            list-style-type: none;
+            padding: 0;
+        }
+        li {
+            background: #f8f8f8;
+            margin: 10px 0;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+        .fcode-title {
+            font-weight: bold;
+            color: #d9534f;
+        }
+        .fcode-title-yes {
+            font-weight: bold;
+            color: #56d94f;
+        }
+
+
 
     </style>
 </head>
@@ -277,7 +468,7 @@ $conn->close();
         <?php include 'navbar.php'; ?>
         <div class="container">
         <div style="text-align: center; margin-bottom: 20px;">
-        <img src="/mick/my-php/home-icon.png" alt="Home Icon" class="large-icon">
+        <img src="/hos/fire_ex/home-icon.png" alt="Home Icon" class="large-icon">
             </div>
             <h1>หน้าหลัก ระบบตรวจสอบถังดับเพลิง</h1>
             <h2>ยินดีต้อนรับ! คุณ<?php echo htmlspecialchars($_SESSION['firstname']); ?>!</h2>
@@ -346,9 +537,10 @@ $conn->close();
                 $percentage = ($totalCount > 0) ? round(($evaluatedCount / $totalCount) * 100, 2) : 'N/A';
 
                 // Description in Thai for the selected filters
-                $description = "ข้อมูลการประเมินในเดือน " . $thaiMonths[$selectedMonth] . " ปี " . $selectedYear;
+                $description = "ข้อมูลการประเมินในเดือน " . $thaiMonths[$selectedMonth] . " ปี " . $selectedYear . " ประเมินทั้งหมด ". $evaluatedCount ." ถัง จากทั้งหมด " . $totalCount. " ถัง " ;
 
                 if ($selectedLayer === 'all') {
+                    $desth .= "ของชั้นทั้งหมด";
                     $description .= " ของชั้นทั้งหมด";
                     if ($totalCount > 0) {
                         $description .= " คิดเป็น " . $percentage . "% ของชั้นทั้งหมด";
@@ -356,26 +548,95 @@ $conn->close();
                         $description .= " ไม่มีข้อมูล";
                     }
                 } else {
-                    $description .= " ของชั้นที่ " . $selectedLayer;
+                    $desth .= "ของชั้น" . $selectedLayer;
+                    $description .= " ของชั้น " . $selectedLayer;
                     if ($totalCount > 0) {
                         $description .= " คิดเป็น " . $percentage . "% ของชั้นที่ " . $selectedLayer;
                     } else {
                         $description .= " ไม่มีข้อมูล";
                     }
                 }
-
-            echo $description;
                 ?>
                 
             </div>
-            <h2>เปอร์เซ็นต์การตรวจสอบ</h2>
+            <h2>เปอร์เซ็นต์การตรวจสอบ<?php echo $desth ?></h2>
             <canvas id="myPieChart"></canvas>
-            <h2>สถิติการตรวจสอบ (Yes/No)</h2>
+            <div class="description">
+            <?php echo $description;?>
+            </div>
+            <h2>สถิติการตรวจสอบถังดับเพลิง<?php echo $desth ?></h2>
             <canvas id="myBarChart"></canvas>
             <div id="fcode-list">
-        <h3>รายการถังที่มีค่าไม่ผ่าน</h3>
-        <ul id="fcode-list-items"></ul>
+        <h2>รายการถังดับเพลิงที่<font color="green">ผ่าน</font>การตรวจสอบ<?php echo $desth ?></h2>
+        <p>จำนวนถังดับเพลิง<?php echo $desth ?>ที่<font color="green">ผ่าน</font>: <?php echo count($yesFcodes); ?> ถัง</p>
+        <ul>
+            <?php foreach ($yesFcodes as $fcode): ?>
+                <li>
+                    <span class="fcode-title-yes">ถังลำดับที่:</span> <?php echo $fcode['F_Tank']; ?><br>
+                    <span class="fcode-title-yes">ชั้นที่:</span> <?php echo $fcode['F_layer']; ?><br>
+                    <span class="fcode-title-yes">ตำแหน่ง:</span> <?php echo $fcode['F_located']; ?>
+                </li>
+            <?php endforeach; ?>
+            <?php if (empty($yesFcodes)): ?>
+                <li>ในส่วน<?php echo $desth ?>ไม่มีถังดับเพลิงที่ผ่าน</li>
+            <?php endif; ?>
+        </ul>
     </div>
+    
+    <div id="fcode-list">
+            <h2>รายการถังดับเพลิงที่<font color="red">ไม่ผ่าน</font>การตรวจสอบ<?php echo $desth; ?></h2>
+            <p>จำนวนถังดับเพลิง<?php echo $desth ?>ที่<font color="red">ไม่ผ่าน</font>มีทั้งหมด <?php echo count($noFcodes); ?> ถัง</p>
+    <ul>
+        <?php foreach ($noFcodes as $fcode): ?>
+            <li>
+                <span class="fcode-title">ถังลำดับที่:</span> <?php echo $fcode['F_Tank']; ?><br>
+                <span class="fcode-title">ชั้นที่:</span> <?php echo $fcode['F_layer']; ?><br>
+                <span class="fcode-title">ตำแหน่ง:</span> <?php echo $fcode['F_located']; ?>
+            </li>
+        <?php endforeach; ?>
+        <?php if (empty($noFcodes)): ?>
+            <li>ในส่วน<?php echo $desth ?>ไม่มีถังดับเพลิงที่มีค่าไม่ผ่าน</li>
+        <?php endif; ?>
+    </ul>
+    </div>
+    <h2>สถิติการตรวจสอบตู้สายน้ำดับเพลิง<?php echo $desth ?></h2>
+    <canvas id="myNewChart" width="400" height="200"></canvas>
+    <div id="fcode-list">
+    <h2>รายการตู้สายน้ำดับเพลิงที่ผลการตรวจสอบ<font color="green">ปกติ</font><?php echo $desth ?></h2>
+    <p>จำนวนตู้ดับเพลิง<?php echo $desth ?>ที่<font color="green">ปกติ</font>: <?php echo count($yesWaterFcodes); ?> ตู้</p>
+    <ul>
+        <?php foreach ($yesWaterFcodes as $fcode): ?>
+            <li>
+                <span class="fcode-title-yes">บริเวณถังลำดับที่:</span> <?php echo $fcode['F_Tank']; ?><br>
+                <span class="fcode-title-yes">ชั้นที่:</span> <?php echo $fcode['F_layer']; ?><br>
+                <span class="fcode-title-yes">ตำแหน่งตู้:</span> <?php echo $fcode['F_located']; ?>
+            </li>
+        <?php endforeach; ?>
+        <?php if (empty($yesWaterFcodes)): ?>
+            <li>ในส่วน<?php echo $desth ?>ไม่มีตู้ดับเพลิงที่ผ่าน</li>
+        <?php endif; ?>
+    </ul>
+    </div>
+    
+    <div id="fcode-list">
+            <h2>รายการตู้สายน้ำดับเพลิงที่ผลการตรวจสอบ<font color="red">ไม่ปกติ</font><?php echo $desth ?></h2>
+            <p>จำนวนรายการตู้ดับเพลิง<?php echo $desth ?>ที่<font color="red">ไม่ปกติ</font>มีทั้งหมด <?php echo count($nowaterFcodes); ?> ตู้</p>
+    <ul>
+        <?php foreach ($nowaterFcodes as $fcode): ?>
+            <li>
+                <span class="fcode-title">บริเวณถังลำดับที่:</span> <?php echo $fcode['F_Tank']; ?><br>
+                <span class="fcode-title">ชั้นที่:</span> <?php echo $fcode['F_layer']; ?><br>
+                <span class="fcode-title">ตำแหน่งตู้:</span> <?php echo $fcode['F_located']; ?>
+            </li>
+        <?php endforeach; ?>
+        <?php if (empty($nowaterFcodes)): ?>
+            <li>ในส่วน<?php echo $desth ?>ไม่มีตู้ดับเพลิงที่มีค่าไม่ผ่าน</li>
+        <?php endif; ?>
+    </ul>
+    </div>
+
+    
+
             <a href="logout.php" class="button" id="logoutButton" style="background-color: #f44336;">Logout</a>
         </div>
 
@@ -384,6 +645,19 @@ $conn->close();
     // Initialize or destroy existing charts
     var pieChartCanvas = document.getElementById('myPieChart');
     var barChartCanvas = document.getElementById('myBarChart');
+    var newChartCanvas = document.getElementById('myNewChart');
+
+    if (pieChartCanvas.chart) {
+        pieChartCanvas.chart.destroy();
+    }
+    if (barChartCanvas.chart) {
+        barChartCanvas.chart.destroy();
+    }
+    if (newChartCanvas.chart) { // Destroy the new chart if it exists
+        newChartCanvas.chart.destroy();
+    }
+
+
 
     // Destroy existing charts if they exist
     if (pieChartCanvas.chart) {
@@ -458,18 +732,67 @@ $conn->close();
             labels: labels,
             datasets: [
                 {
-                    label: 'ผ่าน',
-                    data: yesData,
-                    backgroundColor: 'rgba(76, 175, 80, 0.5)',
-                    borderColor: 'rgba(76, 175, 80, 1)',
-                    borderWidth: 1
+    label: 'ปกติ',
+    data: yesData,
+    backgroundColor: 'linear-gradient(90deg, rgba(129,199,132,0.5) 0%, rgba(76,175,80,0.5) 100%)', // Gradient สีเขียว
+    borderColor: 'rgba(76, 175, 80, 1)', 
+    borderWidth: 2
+},
+{
+    label: 'ไม่ปกติ',
+    data: noData,
+    backgroundColor: 'linear-gradient(90deg, rgba(255,138,128,0.5) 0%, rgba(255,87,51,0.5) 100%)', // Gradient สีส้ม
+    borderColor: 'rgba(255, 87, 51, 1)',
+    borderWidth: 2
+}
+
+            ]
+        },
+        options: {
+            responsive: true,
+            scales: {
+                x: {
+                    title: {
+                        display: true,
+                        text: 'การประเมินถังดับเพลิง'
+                    }
+                },
+                y: {
+                    title: {
+                        display: true,
+                        text: 'จำนวนถังดับเพลิง'
+                    },
+                    beginAtZero: true
+                }
+            }
+        }
+    });
+
+    var newChartData = <?php echo json_encode($newChartData); ?>;
+    var newLabels = Object.keys(newChartData);
+    var newYesData = newLabels.map(label => newChartData[label]['yes']);
+    var newNoData = newLabels.map(label => newChartData[label]['no']);
+
+    var ctxNew = newChartCanvas.getContext('2d');
+    newChartCanvas.chart = new Chart(ctxNew, {
+        type: 'bar',
+        data: {
+            labels: newLabels,
+            datasets: [
+                {
+                    label: 'ปกติ',
+                    data: newYesData,
+                    backgroundColor: 'linear-gradient(90deg, rgba(102,178,255,0.5) 0%, rgba(54,162,235,0.5) 100%)', // Gradient สีฟ้า
+                    borderColor: 'rgba(0, 123, 255, 1)', 
+                    borderWidth: 2
                 },
                 {
-                    label: 'ไม่ผ่าน',
-                    data: noData,
-                    backgroundColor: 'rgba(255, 87, 51, 0.5)',
-                    borderColor: 'rgba(255, 87, 51, 1)',
-                    borderWidth: 1
+                    label: 'ไม่ปกติ',
+                    data: newNoData,
+                    backgroundColor: 'linear-gradient(90deg, rgba(255,153,153,0.5) 0%, rgba(255,99,132,0.5) 100%)', // Gradient สีแดง
+                    borderColor: 'rgba(255, 69, 96, 1)', 
+                    borderWidth: 2
+
                 }
             ]
         },
@@ -479,42 +802,26 @@ $conn->close();
                 x: {
                     title: {
                         display: true,
-                        text: 'Evaluation Criteria'
+                        text: 'การประเมินตู้นิรภัยดับเพลิง'
                     }
                 },
                 y: {
                     title: {
                         display: true,
-                        text: 'Count'
+                        text: 'จำนวนตู้ที่ประเมิน'
                     },
                     beginAtZero: true
                 }
             }
         }
     });
+
+    
      // Display FCODE list
-     console.log(fcodeList);
-
-    // ถ้า fcodeList เป็นวัตถุ
-    if (typeof fcodeList === 'object' && !Array.isArray(fcodeList)) {
-        // แปลงวัตถุเป็นอาร์เรย์
-        fcodeList = Object.values(fcodeList);
-    }
-
-    var fcodeListItems = document.getElementById('fcode-list-items');
-    if (Array.isArray(fcodeList) && fcodeList.length > 0) {
-        fcodeList.forEach(function(fcode) {
-            var listItem = document.createElement('li');
-            listItem.textContent = fcode;
-            fcodeListItems.appendChild(listItem);
-        });
-    } else {
-        fcodeListItems.textContent = "ไม่พบข้อมูล";
-    }
 });
-console.log('Chart Data:', chartData);
-console.log('Yes Data:', yesData);
-console.log('No Data:', noData);
+console.log('New Chart Data:', newChartData);
+console.log('New Yes Data:', newYesData);
+console.log('New No Data:', newNoData);
 
 
 var chartData = <?php echo json_encode($chartData); ?>;

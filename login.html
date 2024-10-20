@@ -3,68 +3,87 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Login</title>
+    <title>Login - Fire Extinguisher Inspection</title>
     <link rel="stylesheet" href="navbar.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
     <style>
-       body {
+        body {
             font-family: 'Roboto', sans-serif;
-            background: linear-gradient(135deg, #6a11cb, #2575fc);
+            background-image: url('ropo.jpg'); /* เพิ่มรูปพื้นหลัง */
+            background-size: cover;
+            background-position: center;
             display: flex;
             justify-content: center;
             align-items: center;
             height: 100vh;
             margin: 0;
-            color: #333;
+            color: #fff;
+        }
+
+        /* เพิ่มการเบลอและไล่สีม่วงเล็กน้อย */
+        body::before {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(106, 27, 154, 0.7); /* สีม่วง */
+            backdrop-filter: blur(10px); /* เบลอพื้นหลัง */
+            z-index: 0;
         }
 
         .login-container {
-            background-color: #fff;
+            background-color: rgba(255, 255, 255, 0.9); /* เพิ่มความโปร่งใส */
             padding: 40px;
             border-radius: 10px;
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
-            width: 360px;
+            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.3);
+            width: 400px;
             text-align: center;
-            border: 1px solid #ddd;
+            border: 2px solid #7d3c98;
+            color: #333;
+            z-index: 1;
+            position: relative; /* ทำให้ overlay อยู่ข้างหลัง */
         }
 
         .login-container h2 {
             margin-bottom: 20px;
-            color: #333;
-            font-size: 24px;
+            color: #6a1b9a;
+            font-size: 28px;
+            font-weight: bold;
         }
 
         .login-container label {
             display: block;
             margin-bottom: 8px;
             font-weight: 500;
-            color: #555;
+            color: #6a1b9a;
         }
 
         .login-container input[type="text"],
         .login-container input[type="password"] {
-            width: calc(100% - 20px);
-            padding: 10px;
+            width: calc(100% - 22px);
+            padding: 12px;
             margin-bottom: 15px;
-            border: 1px solid #ccc;
-            border-radius: 6px;
+            border: 1px solid #7d3c98;
+            border-radius: 8px;
             font-size: 16px;
             transition: border-color 0.3s ease;
         }
 
         .login-container input[type="text"]:focus,
         .login-container input[type="password"]:focus {
-            border-color: #4CAF50;
+            border-color: #6a1b9a;
             outline: none;
         }
 
         .login-container input[type="submit"] {
             width: 100%;
             padding: 12px;
-            background-color: #4CAF50;
+            background-color: #8e44ad;
             border: none;
-            border-radius: 6px;
+            border-radius: 8px;
             color: white;
             font-size: 18px;
             cursor: pointer;
@@ -72,7 +91,23 @@
         }
 
         .login-container input[type="submit"]:hover {
-            background-color: #45a049;
+            background-color: #6a1b9a;
+        }
+
+        .login-container .footer-text {
+            margin-top: 20px;
+            font-size: 14px;
+            color: #6a1b9a;
+        }
+
+        .login-container .footer-text a {
+            color: #8e44ad;
+            text-decoration: none;
+            font-weight: bold;
+        }
+
+        .login-container .footer-text a:hover {
+            text-decoration: underline;
         }
 
         .login-container .error {
@@ -84,27 +119,13 @@
             color: green;
             margin-bottom: 15px;
         }
-
-        .login-container .footer-text {
-            margin-top: 20px;
-            font-size: 14px;
-        }
-
-        .login-container .footer-text a {
-            color: #4CAF50;
-            text-decoration: none;
-            font-weight: bold;
-        }
-
-        .login-container .footer-text a:hover {
-            text-decoration: underline;
-        }
-    </style>
     </style>
 </head>
 <body>
     <div class="login-container">
-        <h2>Login</h2>
+        <img src="/hos/fire_ex/home-icon.png" alt="Home Icon" class="large-icon">
+        <h2>ระบบตรวจสอบถังดับเพลิง</h2>
+        <h3>โรงพยาบาลเกษมราษฎร์ ประชาชื่น</h3>
         <form id="loginForm" action="login.php" method="POST">
             <label for="username">Username</label>
             <input type="text" id="username" name="username" required>
@@ -120,22 +141,29 @@
     <script>
         $(document).ready(function(){
             $('#loginForm').on('submit', function(e) {
-                e.preventDefault(); // ป้องกันการส่งฟอร์มปกติ
-
-                var formData = $(this).serialize(); // ดึงข้อมูลฟอร์ม
-
+                e.preventDefault();
+        
+                var formData = $(this).serialize();
+        
                 $.ajax({
                     type: 'POST',
-                    url: 'login.php', // URL ที่ใช้ตรวจสอบการล็อกอิน
+                    url: 'login.php',
                     data: formData,
                     success: function(response) {
                         if (response === "success") {
-                            window.location.href = "index.php"; // เปลี่ยนเส้นทางหลังจากล็อกอินสำเร็จ
+                            window.location.href = "index.php";
+                        } else if (response === "suspended") {
+                            Swal.fire({
+                                icon: 'info',
+                                title: 'บัญชีนี้ถูกระงับ',
+                                text: 'ขณะนี้บัญชีของท่านถูกระงับโดยแอดมิน กรุณาติดต่อเจ้าหน้าที่',
+                                confirmButtonText: 'OK'
+                            });
                         } else {
                             Swal.fire({
                                 icon: 'error',
-                                title: 'Login Failed',
-                                text: response, // ข้อความผิดพลาดจากเซิร์ฟเวอร์
+                                title: 'การเข้าสู่ระบบล้มเหลว',
+                                text: response,
                                 confirmButtonText: 'Try Again'
                             });
                         }
@@ -151,6 +179,6 @@
                 });
             });
         });
-    </script>
+        </script>
 </body>
 </html>

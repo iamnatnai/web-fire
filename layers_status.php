@@ -1,4 +1,20 @@
 <?php
+session_start();
+if (!isset($_SESSION['user_id'])): ?>
+    <script>
+        Swal.fire({
+            icon: 'error',
+            title: 'Access Denied',
+            text: 'You need to login to access this page.',
+            confirmButtonText: 'OK'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                window.location.href = 'login.html';
+            }
+        });
+    </script>
+    
+    <?php else:
 // Include the database configuration file
 include 'config.php';
 
@@ -175,7 +191,8 @@ th {
 <body>
 <div class="container">
     <h1>สถานะการประเมินตามชั้น</h1>
-    <a href="download_report.php" class="btn">ดาวน์โหลดรายละเอียด</a>
+    <a href="download_report.php" class="btn">ดาวน์โหลดรายละเอียด</a><br>
+    <a href="home.php" class="btn">หน้ารายงานสำหรับบุคลทั้วไป</a>
     <?php if (!empty($response)): ?>
         <table>
             <thead>
@@ -202,25 +219,34 @@ th {
                         <td><?php echo htmlspecialchars($layer['total']); ?></td>
                         <td><?php echo htmlspecialchars($layer['evaluated']); ?></td>
                         <td><?php echo htmlspecialchars($layer['unevaluated']); ?></td>
-                        <td><span class="details" onclick="toggleDetails('<?php echo htmlspecialchars($layer['layer_name']); ?>')">ดูรายละเอียด</span></td>
-                    </tr>
-                    <tr class="details-container" id="details-<?php echo htmlspecialchars($layer['layer_name']); ?>">
-                        <td colspan="5">
-                            <p><strong>สถานที่ที่ยังไม่ได้ทำการประเมิน:</strong></p>
-                            <ul>
-                                <?php foreach ($layer['locations'] as $location): ?>
-                                    <li><?php echo htmlspecialchars($location); ?></li>
-                                <?php endforeach; ?>
-                            </ul>
+                        <td>
+                            <?php if ($layer['total'] == $layer['evaluated']): ?>
+                                <span>ครบแล้ว🆗</span>
+                            <?php else: ?>
+                                <span class="details" onclick="toggleDetails('<?php echo htmlspecialchars($layer['layer_name']); ?>')">ดูที่ยังไม่ประเมิน</span>
+                            <?php endif; ?>
                         </td>
                     </tr>
+                    <?php if ($layer['total'] != $layer['evaluated']): ?>
+                        <tr class="details-container" id="details-<?php echo htmlspecialchars($layer['layer_name']); ?>">
+                            <td colspan="5">
+                                <p><strong>สถานที่ที่ยังไม่ได้ทำการประเมิน:</strong></p>
+                                <ul>
+                                    <?php foreach ($layer['locations'] as $location): ?>
+                                        <li><?php echo htmlspecialchars($location); ?></li>
+                                    <?php endforeach; ?>
+                                </ul>
+                            </td>
+                        </tr>
+                    <?php endif; ?>
                 <?php endforeach; ?>
             </tbody>
         </table>
     <?php else: ?>
-        <p>ไม่มีข้อมูลสถานะการประเมิน</p>
+        <p>ไม่มีข้อมูลสถานะการประเมินหรือประเมินครบแล้ว✅</p>
     <?php endif; ?>
 </div>
+
 
 <script>
     function toggleDetails(layerName) {
@@ -234,3 +260,4 @@ th {
 </script>
 </body>
 </html>
+<?php endif; ?>

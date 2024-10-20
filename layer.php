@@ -1,3 +1,21 @@
+<?php
+session_start();
+if (!isset($_SESSION['user_id'])): ?>
+    <script>
+        Swal.fire({
+            icon: 'error',
+            title: 'Access Denied',
+            text: 'You need to login to access this page.',
+            confirmButtonText: 'OK'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                window.location.href = 'login.html';
+            }
+        });
+    </script>
+    
+<?php else:?>
+
 <!DOCTYPE html>
 <html lang="en">
 
@@ -9,7 +27,7 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
-    <link rel="icon" href="/mick/my-php/favicon.ico" type="image/x-icon">
+    <link rel="icon" href="/hos/fire_ex/favicon.ico" type="image/x-icon">
     <style>
          body {
         font-family: Arial, sans-serif;
@@ -219,9 +237,6 @@
         }
     }
 });
-
-
-
                     } else {
                         console.error('Error fetching data:', result.message);
                     }
@@ -231,3 +246,4 @@
     <?php endif; ?>
 </body>
 </html>
+<?php endif; ?>

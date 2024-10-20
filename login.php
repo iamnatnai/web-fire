@@ -7,7 +7,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $password = $_POST['password'];
 
     // ตรวจสอบข้อมูลจากฐานข้อมูล
-    $query = "SELECT * FROM users WHERE username = ?"; // ปรับคำสั่ง SQL ตามฐานข้อมูลของคุณ
+    $query = "SELECT users.*, roles.role_name FROM users 
+              JOIN roles ON users.role_id = roles.id 
+              WHERE username = ?"; // ปรับคำสั่ง SQL เพื่อรวม role
     $stmt = $conn->prepare($query);
     $stmt->bind_param("s", $username);
     $stmt->execute();
@@ -16,18 +18,25 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if ($result->num_rows > 0) {
         $user = $result->fetch_assoc();
         
-        // ตรวจสอบรหัสผ่าน
-        if (password_verify($password, $user['password'])) {
-            $_SESSION['user_id'] = $user['id'];
-            $_SESSION['username'] = $user['username'];
-            $_SESSION['firstname'] = $user['first_name'];
-            $_SESSION['lastname'] = $user['last_name'];
-            echo "success";
+        // ตรวจสอบสถานะ active
+        if ($user['active'] == 0) {
+            echo "suspended"; // เพิ่ม response เป็น "suspended" หากบัญชีถูกระงับ
         } else {
-            echo "Incorrect password";
+            // ตรวจสอบรหัสผ่าน
+            if (password_verify($password, $user['password'])) {
+                // เก็บข้อมูลใน session
+                $_SESSION['user_id'] = $user['id'];
+                $_SESSION['username'] = $user['username'];
+                $_SESSION['firstname'] = $user['first_name'];
+                $_SESSION['lastname'] = $user['last_name'];
+                $_SESSION['role'] = $user['role_name']; // เก็บ role ของผู้ใช้ใน session
+                echo "success";
+            } else {
+                echo "รหัสผ่านไม่ถูกต้อง";
+            }
         }
     } else {
-        echo "Username not found";
+        echo "ไม่พบบัญชีนี้ในระบบ";
     }
 
     $stmt->close();

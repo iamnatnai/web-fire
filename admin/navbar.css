@@ -1,0 +1,140 @@
+/* Basic Styles */
+body {
+    margin: 0;
+    font-family: Arial, sans-serif;
+}
+
+.navbar {
+    background-color: #6a0dad; /* Purple color */
+    color: white;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 20px;
+    position: relative;
+    z-index: 1000; /* Ensure the navbar is above other elements */
+}
+
+.navbar a {
+    color: white;
+    text-decoration: none;
+    padding: 10px 15px;
+    font-size: 16px;
+    transition: background-color 0.3s;
+}
+
+.navbar a:hover {
+    background-color: #5a0b9d; /* Darker purple on hover */
+    border-radius: 5px;
+}
+
+.navbar-toggle {
+    display: none; /* Hidden by default */
+    flex-direction: column;
+    cursor: pointer;
+    padding: 5px;
+}
+
+.navbar-toggle .bar {
+    background-color: white;
+    height: 3px;
+    width: 25px;
+    margin: 3px 0;
+    transition: 0.3s;
+}
+
+.navbar-menu {
+    display: flex;
+    gap: 20px;
+}
+
+.navbar-menu a {
+    display: flex;
+    align-items: center;
+}
+
+.navbar-progress {
+    display: flex;
+    align-items: center;
+    margin-left: auto;
+    padding: 0 20px;
+}
+
+.progress-label {
+    font-size: 14px;
+    color: #fff;
+    margin-right: 10px;
+    display: flex;
+    align-items: center;
+}
+
+.progress-label i {
+    margin-right: 5px; /* Adjust as needed */
+}
+
+.progress-bar-container {
+    width: 200px;
+    height: 20px;
+    background: #ddd;
+    border-radius: 10px;
+    margin-right: 10px;
+    position: relative;
+}
+
+.progress-bar {
+    height: 100%;
+    width: 0;
+    background: #4caf50;
+    border-radius: 10px;
+    position: absolute;
+    top: 0;
+    left: 0;
+    transition: width 0.3s;
+}
+
+.progress-text {
+    font-size: 18px;
+    color: #fff;
+}
+
+/* Mobile Styles */
+@media (max-width: 768px) {
+    .navbar-menu {
+        display: none; /* Hide menu by default */
+        position: absolute;
+        top: 60px;
+        left: 0;
+        width: 100%;
+        background-color: #6a0dad; /* Same purple color */
+        flex-direction: column;
+    }
+
+    .navbar-menu.active {
+        display: flex; /* Show menu when active */
+    }
+
+    .navbar-toggle {
+        display: flex; /* Show toggle button on mobile */
+    }
+
+    .navbar-toggle.active .bar:nth-child(2) {
+        opacity: 0; /* Hide middle bar when active */
+    }
+
+    .navbar-toggle.active .bar:nth-child(1) {
+        transform: rotate(45deg) translate(5px, 6px); /* Rotate top bar */
+    }
+    #canvas {
+        position: absolute; /* ใช้ position absolute เพื่อให้อยู่เหนือวิดีโอ */
+        top: 0;
+        left: 0;
+        width: 100%; /* ทำให้ canvas ขนาดเท่ากับวิดีโอ */
+        height: 100%;
+        pointer-events: none; /* ทำให้ canvas ไม่รับการคลิก */
+        z-index: 10; /* ทำให้ canvas อยู่บนสุด */
+      }
+
+    .navbar-toggle.active .bar:nth-child(3) {
+        transform: rotate(-45deg) translate(7px, -8px); /* Rotate bottom bar */
+    }
+}

@@ -1,4 +1,20 @@
 <?php
+session_start();
+if (!isset($_SESSION['user_id'])): ?>
+    <script>
+        Swal.fire({
+            icon: 'error',
+            title: 'Access Denied',
+            text: 'You need to login to access this page.',
+            confirmButtonText: 'OK'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                window.location.href = 'login.html';
+            }
+        });
+    </script>
+    
+<?php else:
 // Include the database configuration file
 include 'config.php';
 
@@ -103,7 +119,7 @@ $conn->close();
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
-    <link rel="icon" href="/mick/my-php/favicon.ico" type="image/x-icon">
+    <link rel="icon" href="/hos/fire_ex/favicon.ico" type="image/x-icon">
     <title>Result Page</title>
     <style>
         body {
@@ -202,10 +218,10 @@ $conn->close();
             <a href="evaluation_page.php?data=<?php echo urlencode($response['data']['FCODE']); ?>" class="btn">ไปยังแบบประเมิน</a>
         <?php endif; ?>
         <p><strong>ลำดับถังที่:</strong> <?php echo htmlspecialchars($response['data']['F_Tank']); ?></p>
-        <p><strong>สายน้ำ:</strong> <?php echo htmlspecialchars($response['data']['F_water']); ?></p>
-        <p><strong>ที่อยู่:</strong> <?php echo htmlspecialchars($response['data']['F_located']); ?></p>
+        <p><strong>รหัสตู้สายน้ำ:</strong> <?php echo htmlspecialchars($response['data']['F_water']); ?></p>
+        <p><strong>ตำแหน่งของถัง/ตู้:</strong> <?php echo htmlspecialchars($response['data']['F_located']); ?></p>
         <p><strong>รูปภาพ:</strong></p>
-        <img src="<?php echo htmlspecialchars("/mick/my-php" . $response['data']['image_path']); ?>" alt="Fire Extinguisher Image">
+        <img src="<?php echo htmlspecialchars("/hos/fire_ex" . $response['data']['image_path']); ?>" alt="Fire Extinguisher Image">
 
         <!-- Layer Status Information -->
         <?php if (!empty($response['layerStatus'])): ?>
@@ -249,3 +265,4 @@ $conn->close();
 </script>
 </body>
 </html>
+<?php endif; ?>

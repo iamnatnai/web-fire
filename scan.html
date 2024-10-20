@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <title>QR SCANNER</title>
   <script src="./jsQR.js"></script>
-  <link rel="icon" href="/mick/my-php/favicon.ico" type="image/x-icon">
+  <link rel="icon" href="/hos/fire_ex/favicon.ico" type="image/x-icon">
   <style>
     body, html {
       margin: 0;
@@ -63,75 +63,88 @@
       canvas.stroke();
     }
 
-    navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } }).then(function (stream) {
-      video.srcObject = stream;
-      video.setAttribute("playsinline", true); // required to tell iOS safari we don't want fullscreen
-      video.play();
-      requestAnimationFrame(tick);
-    });
+    navigator.mediaDevices.getUserMedia({ 
+  video: { 
+    facingMode: "environment", 
+    width: { ideal: 640 }, // ลดขนาดของวิดีโอ
+    height: { ideal: 480 }
+  } 
+}).then(function (stream) {
+  video.srcObject = stream;
+  video.setAttribute("playsinline", true);
+  video.play();
+  requestAnimationFrame(tick);
+});
 
     var hasScanned = false;
 
-    function tick() {
-      if (hasScanned) return;
+    var frameSkip = 0;
+function tick() {
+  if (hasScanned) return;
 
-      loadingMessage.innerText = "⌛ Loading video...";
-      if (video.readyState === video.HAVE_ENOUGH_DATA) {
-        loadingMessage.hidden = true;
-        canvasElement.hidden = false;
-        outputContainer.hidden = false;
+  loadingMessage.innerText = "⌛ Loading video...";
+  if (video.readyState === video.HAVE_ENOUGH_DATA) {
+    loadingMessage.hidden = true;
+    canvasElement.hidden = false;
+    outputContainer.hidden = false;
 
-        // Set canvas size to full viewport
-        canvasElement.width = window.innerWidth;
-        canvasElement.height = window.innerHeight;
+    // Set canvas size to full viewport
+    canvasElement.width = window.innerWidth;
+    canvasElement.height = window.innerHeight;
 
-        canvas.drawImage(video, 0, 0, canvasElement.width, canvasElement.height);
-        var imageData = canvas.getImageData(0, 0, canvasElement.width, canvasElement.height);
-        var code = jsQR(imageData.data, imageData.width, imageData.height, {
-          inversionAttempts: "dontInvert",
+    canvas.drawImage(video, 0, 0, canvasElement.width, canvasElement.height);
+
+    if (frameSkip % 10 === 0) { // ตรวจสอบ QR code ทุกๆ 10 frames
+      var imageData = canvas.getImageData(0, 0, canvasElement.width, canvasElement.height);
+      var code = jsQR(imageData.data, imageData.width, imageData.height, {
+        inversionAttempts: "dontInvert",
+      });
+      if (code) {
+        drawLine(code.location.topLeftCorner, code.location.topRightCorner, "#d13bff");
+        drawLine(code.location.topRightCorner, code.location.bottomRightCorner, "#d13bff");
+        drawLine(code.location.bottomRightCorner, code.location.bottomLeftCorner, "#d13bff");
+        drawLine(code.location.bottomLeftCorner, code.location.topLeftCorner, "#d13bff");
+        outputMessage.hidden = true;
+        outputData.parentElement.hidden = false;
+        outputData.innerText = code.data;
+
+        hasScanned = true;
+
+        fetch("https://kasemradpcc.com/hos/fire_ex/process_qr.php", {
+          method: 'POST',
+          headers: {
+              'Content-Type': 'application/x-www-form-urlencoded',
+          },
+          body: 'qrData=' + encodeURIComponent(code.data)
+        })
+        .then(response => response.text())
+        .then(text => {
+            try {
+                const result = JSON.parse(text);
+                if (result.status === "found") {
+                    window.location.href = `result_page.php?data=${encodeURIComponent(code.data)}`;
+                } else if (result.status === "not_found") {
+                    outputMessage.innerText = "ไม่พบข้อมูลในฐานข้อมูล";
+                } else if (result.status === "error") {
+                    outputMessage.innerText = "เกิดข้อผิดพลาด: " + result.message;
+                }
+            } catch (e) {
+                console.error('Error parsing JSON:', e);
+                outputMessage.innerText = "เกิดข้อผิดพลาดในการประมวลผลข้อมูล";
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            outputMessage.innerText = "เกิดข้อผิดพลาดในการส่งข้อมูลไปยังเซิร์ฟเวอร์";
         });
-        if (code) {
-          drawLine(code.location.topLeftCorner, code.location.topRightCorner, "#d13bff");
-          drawLine(code.location.topRightCorner, code.location.bottomRightCorner, "#d13bff");
-          drawLine(code.location.bottomRightCorner, code.location.bottomLeftCorner, "#d13bff");
-          drawLine(code.location.bottomLeftCorner, code.location.topLeftCorner, "#d13bff");
-          outputMessage.hidden = true;
-          outputData.parentElement.hidden = false;
-          outputData.innerText = code.data;
-
-          hasScanned = true;
-
-          fetch("https://kasemradpcc.com/mick/my-php/process_qr.php", {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/x-www-form-urlencoded',
-            },
-            body: 'qrData=' + encodeURIComponent(code.data)
-          })
-          .then(response => response.text())
-          .then(text => {
-              try {
-                  const result = JSON.parse(text);
-                  if (result.status === "found") {
-                      window.location.href = `result_page.php?data=${encodeURIComponent(code.data)}`;
-                  } else if (result.status === "not_found") {
-                      outputMessage.innerText = "ไม่พบข้อมูลในฐานข้อมูล";
-                  } else if (result.status === "error") {
-                      outputMessage.innerText = "เกิดข้อผิดพลาด: " + result.message;
-                  }
-              } catch (e) {
-                  console.error('Error parsing JSON:', e);
-                  outputMessage.innerText = "เกิดข้อผิดพลาดในการประมวลผลข้อมูล";
-              }
-          })
-          .catch(error => {
-              console.error('Error:', error);
-              outputMessage.innerText = "เกิดข้อผิดพลาดในการส่งข้อมูลไปยังเซิร์ฟเวอร์";
-          });
-        }
       }
-      requestAnimationFrame(tick);
     }
+
+    frameSkip++;
+  }
+  requestAnimationFrame(tick);
+}
+
   </script>
 </body>
 

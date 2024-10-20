@@ -1,13 +1,7 @@
 <?php
 header('Content-Type: application/json');
 
-$servername = "localhost";
-$username = "kasemra2_dcc"; // Database username
-$password = "123456"; // Database password
-$dbname = "kasemra2_dcc"; // Database name
-
-// Create connection
-$conn = new mysqli($servername, $username, $password, $dbname);
+include 'config.php';
 
 // Check connection
 if ($conn->connect_error) {

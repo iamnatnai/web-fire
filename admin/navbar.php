@@ -15,14 +15,14 @@
             <div class="bar"></div>
         </div>
         <div class="navbar-menu" id="navbar-menu">
-        <a href="index.php"><i class="fas fa-home"></i> Home</a>
-        <!-- <a href="evaluation_page.php"><i class="fas fa-clipboard-list"></i> Evaluation</a> -->
-        <a href="layer.php"><i class="fas fa-map-marker-alt"></i> Location</a>
-        <a href="scan.html"><i class="fas fa-qrcode"></i> Scan</a>
-        <a href="layers_status.php"><i class="fas fa-layer-group"></i> Layers Status</a>
-        <a href="edit_profile.php"><i class="fas fa-user-edit"></i> Edit Profile</a>
+        <a href="../index.php"><i class="fas fa-home"></i> Home</a>
+        <!-- <a href="../evaluation_page.php"><i class="fas fa-clipboard-list"></i> Evaluation</a> -->
+        <a href="../layer.php"><i class="fas fa-map-marker-alt"></i> Location</a>
+        <a href="../scan.html"><i class="fas fa-qrcode"></i> Scan</a>
+        <a href="../layers_status.php"><i class="fas fa-layer-group"></i> Layers Status</a>
+        <a href="../edit_profile.php"><i class="fas fa-user-edit"></i> Edit Profile</a>
         <?php if ($_SESSION['role'] === 'Admin'): ?>
-            <a href="admin/manage_users.php"><i class="fas fa-users-cog"></i> Manage Users</a>
+            <a href="manage_users.php"><i class="fas fa-users-cog"></i> Manage Users</a>
         <?php endif; ?>
         </div>
         <div class="navbar-progress">
@@ -42,7 +42,7 @@
         var progressText = document.getElementById('progress-text');
 
         // Fetch progress data from the server
-        fetch('goal.php')
+        fetch('../goal.php')
             .then(response => response.json())
             .then(data => {
                 // Update the progress bar with the fetched data

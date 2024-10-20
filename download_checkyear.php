@@ -57,7 +57,7 @@ while ($yearData = $resultYears->fetch_assoc()) {
     $sheet->setTitle($year);
     
     // Set column headers with purple background and white text
-    $headers = array_merge(['Fire Code', 'F_id', 'F_water', 'F_layer', 'Location'], array_values($thaiMonths));
+    $headers = array_merge(['Code', 'รหัสถังดับเพลิง', 'รหัสตู้สายน้ำ', 'ขั้น', 'ตำแหน่งของถังดับเพลิง/ตู้สายน้ำ'], array_values($thaiMonths));
     $columnNames = range('A', 'Q');
 
     $headerStyle = [

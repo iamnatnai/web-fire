@@ -1,16 +1,5 @@
 <?php
-$servername = "kasemrad1";
-$username = "kasemra2_mick";
-$password = "123456";
-$dbname = "fire_extinguisher";
-
-// สร้างการเชื่อมต่อ
-$conn = new mysqli($servername, $username, $password, $dbname);
-
-// ตรวจสอบการเชื่อมต่อ
-if ($conn->connect_error) {
-    die("Connection failed: " . $conn->connect_error);
-}
+include 'config.php';
 
 // รับข้อมูลที่ส่งมาจากฟอร์ม
 $qrData = $_POST['qrData'];
